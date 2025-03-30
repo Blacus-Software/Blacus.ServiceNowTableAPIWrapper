@@ -11,9 +11,9 @@
 		<NoWarn>1701;1702;8625;600;8604;8602;8629;8600;8601;8625;8625;8603</NoWarn>
 	</PropertyGroup>
 
-	<ItemGroup>
-    <ProjectReference Include="..\ServiceNowTableAPIWrapperTestProject\ServiceNowTableAPIWrapperTestProject.csproj" />
-    <ProjectReference Include="..\ServiceNowTableAPIWrapper\ServiceNowTableAPIWrapper.csproj" />
+	<ItemGroup> 
+    <ProjectReference Include="..\..\src\ServiceNowTableAPIWrapper\ServiceNowTableAPIWrapper.csproj" /> 
+    <ProjectReference Include="..\ServiceNowTableAPIWrapperTestProject\ServiceNowTableAPIWrapperTestProject.csproj" /> 
   </ItemGroup>
 
 </Project>
