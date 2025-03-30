@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ConsoleAppServiceNowTableAPIWrapper": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "SNCredPath": "../../../../../gitIgnore/serviceNowCredentials.json"
+      }
+    }
+  }
+}
