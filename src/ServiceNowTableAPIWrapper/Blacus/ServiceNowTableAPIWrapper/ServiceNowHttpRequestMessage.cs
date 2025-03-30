@@ -9,23 +9,22 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
     public static class ServiceNowHttpRequestMessage
     {
-
-        private static MediaTypeWithQualityHeaderValue mediaTypeWithQualityHeaderValue = new MediaTypeWithQualityHeaderValue("application/json");
+         
         private static ConcurrentDictionary<string, AuthenticationHeaderValue> _authStringCache = new();
 
-        public static HttpRequestMessage NewHttpRequestMessage(HttpMethod get, Uri url, ServiceNowCredential credential)
+        public static HttpRequestMessage NewHttpRequestMessage(HttpMethod method, string url, ServiceNowCredential credential)
         {
 
-            HttpRequestMessage toReturn = new(get, url);
+            HttpRequestMessage toReturn = new(method, url);
 
-            toReturn.Headers.Accept.Add(mediaTypeWithQualityHeaderValue);
+            toReturn.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             toReturn.Headers.Authorization = GetAuth(credential.Username, credential.Password);
 
             return toReturn;
 
         }
 
-        private static AuthenticationHeaderValue GetAuth(string username, string password)
+        public static AuthenticationHeaderValue GetAuth(string username, string password)
         {
 
             string key = $"{username}:{password}";
