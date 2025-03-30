@@ -30,7 +30,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
                 if (propertyValue != null)
                 {
-                    query[propertyName] = propertyValue.ToString();
+                    query[propertyName] = propertyValue.ToString().ToLower();
                 }
 
             }
@@ -45,7 +45,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
                     if (value != null)
                     {
-                        query[property.Name] = value.ToString();
+                        query[property.Name] = value.ToString().ToLower();
                     }
                 }
             }
