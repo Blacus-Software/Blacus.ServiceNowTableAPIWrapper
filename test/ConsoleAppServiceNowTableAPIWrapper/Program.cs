@@ -3,7 +3,6 @@ using Blacus.ServiceNowTableAPIWrapper;
 using ConsoleAppServiceNowTableAPIWrapper.Models;
 using ServiceNowTableAPIWrapperTestProject;
 using ServiceNowTableAPIWrapperTestProject.Models;
-using System.Net;
 
 namespace ConsoleAppServiceNowTableAPIWrapper
 {
@@ -17,33 +16,19 @@ namespace ConsoleAppServiceNowTableAPIWrapper
         static void Main(string[] args)
         {
 
-            QueryParameters queryParameters = new QueryParameters<Contract>().GetQueryParameters();
-
-            var query = queryParameters.GetQueryString();
-
-            string urlString = "https://kabamdev.service-now.com/api/now/table/ast_contract?sysparm_query=sys_id=0182781c1b74d550e260a7d1ec4bcb90&sysparm_display_value=true&sysparm_exclude_reference_link=true&sysparm_fields=number,sys_id,sys_updated_on,renewal_end_date";
-
-            Uri url = new($"https://{serviceNow.Credentials.Url}/api/now/table/{((QueryParameters)queryParameters).TableName}?{queryParameters.GetQueryString()}");
-            Uri url1 = new(urlString);
-
-            //Console.WriteLine(url.ToString()); 
-            //Console.WriteLine(url1.ToString())
-
-            var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, url1.ToString());// "https://kabamdev.service-now.com/api/now/table/ast_contract?sysparm_query=sys_id=0182781c1b74d550e260a7d1ec4bcb90&sysparm_display_value=true&sysparm_exclude_reference_link=true&sysparm_fields=number,sys_id,sys_updated_on,renewal_end_date");
-            //var request = new HttpRequestMessage(HttpMethod.Get, url);
-
-            request.Headers.Add("Authorization", "Basic amFydmlzX2F1dG9tYXRpb246V1FwOGNiNFQ5YjY1MzY3NG0=");
-            var response = client.Send(request);
-
-            Console.WriteLine(response.Content.ReadAsStringAsync().Result);
-
-            var sss = serviceNow.GetTableByURLAsync<Contract>(urlString).Result;
-
+            RunParseTests();
 
             try
             {
-                var results = serviceNow.GetAsync<Contract>(new() { Query = "sys_id=0182781c1b74d550e260a7d1ec4bcb90" }).Result;
+
+                var results1 = serviceNow.GetAsync<Contract1>(new() { Query = "sys_id=0182781c1b74d550e260a7d1ec4bcb90" }).Result;
+                var record1 = results1.Records.FirstOrDefault();
+
+                var results2 = serviceNow.GetAsync<Contract2>(new() { Query = "sys_id=0182781c1b74d550e260a7d1ec4bcb90" }).Result;
+                var record2 = results2.Records.FirstOrDefault();
+
+                Console.WriteLine($"First: {record1.SysUpdatedOn}\nSecond: {record2.SysUpdatedOn}");
+
             }
             catch (AggregateException aex)
             {

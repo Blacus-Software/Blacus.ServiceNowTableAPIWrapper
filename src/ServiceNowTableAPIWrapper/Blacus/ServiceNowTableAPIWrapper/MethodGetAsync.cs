@@ -5,7 +5,6 @@ namespace Blacus.ServiceNowTableAPIWrapper
 {
 
     using System;
-    using System.Linq;
     using System.Net.Http;
     using System.Text.Json;
     using System.Threading.Tasks;
@@ -41,7 +40,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             responseString = await response.Content.ReadAsStringAsync();
 
-            options = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>();
+            options = JsonSerializerOptionsBuilder.Singleton;
             result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
 
             if (result.Result != null)
@@ -78,75 +77,3 @@ namespace Blacus.ServiceNowTableAPIWrapper
     }
 
 }
-
-/*
-{
-
-            JsonSerializerOptions options = null;
-            RecordGetResponse<T> result = null;
-            string responseString = null;
-
-            Type t = typeof(T);
-            var queryParameters = new QueryParameters<T>();
-
-            var query = queryParameters.GetQueryString();
-
-            if (queryParameterOverride != null)
-            {
-
-                foreach (var property in queryParameterOverride.GetType().GetProperties().Where(p => p.Name != "Item"))
-                {
-
-                    string value = (string)property.GetValue(queryParameterOverride);
-
-                    if (value != null)
-                    {
-                        query[property.Name] = value;
-                    }
-
-                }
-
-            }
-
-            string url = $"https://{Credentials.Url}/api/now/table/{queryParameters.TableName}/{sys_id}?{query.ToString()}";
-
-            HttpResponseMessage response = null;
-
-            try
-            {
-
-                var request = new HttpRequestMessage(HttpMethod.Get, url);
-
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{Credentials.Username}:{Credentials.Password}")));
-
-                response = client.Send(request);
-
-                responseString = await response.Content.ReadAsStringAsync();
-
-                options = ServiceNowTableModel.GetJsonSerializerOptionsByType<T>();
-                result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
-
-                if (result.Result != null)
-                {
-
-                    var resultType = result.Result.GetType();
-                    var originalJSON = resultType.GetProperty("OriginalJSON");
-                    if (originalJSON != null)
-                    {
-                        originalJSON.SetValue(result.Result, responseString);
-                    }
-
-                }
-
-                return result;
-
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-
-        }
-
- */

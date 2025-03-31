@@ -32,7 +32,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             responseString = await response.Content.ReadAsStringAsync();
 
-            var options = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>();
+            var options = JsonSerializerOptionsBuilder.Singleton;
             RecordGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
 
             result.SourceJSON = responseString;

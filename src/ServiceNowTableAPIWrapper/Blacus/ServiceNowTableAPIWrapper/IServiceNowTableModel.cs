@@ -8,7 +8,7 @@
         public string? SysId { get; set; }
 
         public JsonSerializerOptions GetJsonSerializerOptions() =>
-           JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType(this.GetType());
+           JsonSerializerOptionsBuilder.Singleton;
 
     }
 

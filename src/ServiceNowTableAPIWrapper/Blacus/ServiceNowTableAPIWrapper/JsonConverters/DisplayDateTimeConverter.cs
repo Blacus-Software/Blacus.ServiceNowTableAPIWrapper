@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Blacus.ServiceNowTableAPIWrapper
 {
 
-    public class DisplayDateTimeConverter : JsonConverter<DateTime>
+    public class DisplayDateTimeConverterX : JsonConverter<DateTime>
     { 
 
         public override bool CanConvert(Type t) => t == typeof(DateTime);
@@ -61,7 +61,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         }
 
 
-        public static readonly DisplayDateTimeConverter Singleton = new();
+        public static readonly DisplayDateTimeConverterX Singleton = new();
 
     }
 

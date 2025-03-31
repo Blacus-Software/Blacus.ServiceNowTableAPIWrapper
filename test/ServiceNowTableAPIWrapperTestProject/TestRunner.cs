@@ -1,4 +1,5 @@
 ﻿using Blacus.ServiceNowTableAPIWrapper;
+using System.Text.Json;
 
 namespace ServiceNowTableAPIWrapperTestProject
 {
@@ -37,27 +38,21 @@ namespace ServiceNowTableAPIWrapperTestProject
         public bool Matches { get => OutputResult.Equals(OutputSample); }
 
         private void runTest()
-        { 
+        {
 
             string inputSample = Type.GetField("SampleDataInput").GetValue(null).ToString();
             outputSample = Type.GetField("SampleDataOutput").GetValue(null).ToString();
 
             var inputResult = FromJSON<T>(inputSample);
-            outputResult = ToJSON<T>(inputResult); 
+            outputResult = ToJSON<T>(inputResult);
 
         }
 
-        public static TableGetResponse<U>? FromJSON<U>(string json) where U : IServiceNowTableModel
-        {
-            var options = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<U>();
-            return System.Text.Json.JsonSerializer.Deserialize<TableGetResponse<U>>(json, options);
-        }
+        public static TableGetResponse<U>? FromJSON<U>(string json) where U : IServiceNowTableModel =>
+            JsonSerializer.Deserialize<TableGetResponse<U>>(json, JsonSerializerOptionsBuilder.Singleton);
 
-        public static string ToJSON<U>(TableGetResponse<U> data) where U : IServiceNowTableModel
-        {
-            var options = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<U>();
-            return System.Text.Json.JsonSerializer.Serialize<TableGetResponse<U>>(data, options);
-        }
+        public static string ToJSON<U>(TableGetResponse<U> data) where U : IServiceNowTableModel =>
+            JsonSerializer.Serialize<TableGetResponse<U>>(data, JsonSerializerOptionsBuilder.Singleton);
 
     }
 

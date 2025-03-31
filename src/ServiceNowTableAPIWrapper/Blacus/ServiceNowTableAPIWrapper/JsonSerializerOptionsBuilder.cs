@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using Blacus.ServiceNowTableAPIWrapper.JsonConverters;
+using System;
 using System.Text.Json;
 
 namespace Blacus.ServiceNowTableAPIWrapper
@@ -9,60 +8,92 @@ namespace Blacus.ServiceNowTableAPIWrapper
     public class JsonSerializerOptionsBuilder
     {
 
-        public static JsonSerializerOptions GetJsonSerializerOptionsByType<T>() =>
-            GetJsonSerializerOptionsByType(typeof(T));
-
-        private static Dictionary<string, JsonSerializerOptions> jsonSerializerOptions = new();
-
-        public static JsonSerializerOptions GetJsonSerializerOptionsByType(Type objectType)
+        private static Lazy<JsonSerializerOptions> serializerOptions = new(() =>
+        new(JsonSerializerDefaults.General)
         {
-
-            lock (jsonSerializerOptions)
+            Converters =
             {
+                        ParseBoolStringConverter.Singleton,
+                        ReferenceLinkConverter.Singleton,
+                        LongConverter.Singleton,
+                        //DateTimeConverter.Singleton,
+                        //DateTimeOffsetConverter.Singleton
+                        new UniversalDateConverter<DateTime>(),
+                        new UniversalDateConverter<DateTimeOffset>(),
+                        new UniversalDateConverter<DateOnly>(),
+            },
+            WriteIndented = true
+        });
 
-                string keyName = objectType.FullName;
+        public static JsonSerializerOptions Singleton { get => serializerOptions.Value; }
 
-                if (jsonSerializerOptions.ContainsKey(keyName))
-                {
-                    return jsonSerializerOptions[objectType.FullName];
-                }
+        //public static JsonSerializerOptions GetJsonSerializerOptionsByType(Type objectType)
+        //{
 
-                JsonSerializerOptions toReturn = new(JsonSerializerDefaults.General)
-                {
-                    Converters = {
-                    ParseBoolStringConverter.Singleton,
-                    ReferenceLinkConverter.Singleton,
-                    LongConverter.Singleton,
-                },
-                    WriteIndented = true
-                };
+        //    JsonSerializerOptions toReturn = new(JsonSerializerDefaults.General)
+        //    {
+        //        Converters =
+        //            {
+        //                ParseBoolStringConverter.Singleton,
+        //                ReferenceLinkConverter.Singleton,
+        //                LongConverter.Singleton,
+        //                DateTimeConverter.Singleton,
+        //                DateTimeOffsetConverter.Singleton
+        //            },
+        //        WriteIndented = true
+        //    };
 
-                string displayValue = objectType.GetCustomAttribute<SysParmDisplayValue>()?.Value;
+        //    return toReturn;
 
-                switch (displayValue?.ToLower())
-                {
-                    case "true":
-                        toReturn.Converters.Add(DisplayDateTimeOffsetConverter.Singleton);
-                        toReturn.Converters.Add(DisplayDateTimeConverter.Singleton);
-                        break;
+        //    //lock (jsonSerializerOptions)
+        //    //{
 
-                    case "all":
-                        break;
+        //    //    string keyName = objectType.FullName;
 
-                    case "false":
-                    default:
-                        toReturn.Converters.Add(DateTimeConverter.Singleton);
-                        toReturn.Converters.Add(DateTimeOffsetConverter.Singleton);
-                        break;
-                }
+        //    //    if (jsonSerializerOptions.ContainsKey(keyName))
+        //    //    {
+        //    //        return jsonSerializerOptions[objectType.FullName];
+        //    //    }
 
-                jsonSerializerOptions.Add(keyName, toReturn);
+        //    //    JsonSerializerOptions toReturn = new(JsonSerializerDefaults.General)
+        //    //    {
+        //    //        Converters = 
+        //    //        {
+        //    //            ParseBoolStringConverter.Singleton,
+        //    //            ReferenceLinkConverter.Singleton,
+        //    //            LongConverter.Singleton,
+        //    //            DateTimeConverter.Singleton,
+        //    //            DateTimeOffsetConverter.Singleton
+        //    //        },
+        //    //        WriteIndented = true
+        //    //    };
 
-                return toReturn;
+        //    //    string displayValue = objectType.GetCustomAttribute<SysParmDisplayValue>()?.Value;
 
-            }
+        //    //    switch (displayValue?.ToLower())
+        //    //    {
+        //    //        case "true":
+        //    //            toReturn.Converters.Add(DisplayDateTimeOffsetConverter.Singleton);
+        //    //            // toReturn.Converters.Add(DisplayDateTimeConverter.Singleton);
+        //    //            break;
 
-        }
+        //    //        case "all":
+        //    //            break;
+
+        //    //        case "false":
+        //    //        default:
+        //    //            // toReturn.Converters.Add(DateTimeConverter.Singleton);
+        //    //            toReturn.Converters.Add(DateTimeOffsetConverter.Singleton);
+        //    //            break;
+        //    //    }
+
+        //    //    jsonSerializerOptions.Add(keyName, toReturn);
+
+        //    //    return toReturn;
+
+        //    //}
+
+        //}
 
     }
 

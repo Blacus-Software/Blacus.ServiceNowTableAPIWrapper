@@ -37,7 +37,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public async Task<List<T>> GetWithCacheAsync<T>(QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
         {
 
-            var options = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>();
+            var options = JsonSerializerOptionsBuilder.Singleton;
 
             Type t = typeof(T);
 
@@ -111,7 +111,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             if (method == null)
             {
-                jsonText = System.Text.Json.JsonSerializer.Serialize(record, JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>());
+                jsonText = System.Text.Json.JsonSerializer.Serialize(record, JsonSerializerOptionsBuilder.Singleton);
             }
             else
             {
@@ -133,7 +133,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         private RecordGetResponse<T> JSONDeserialize<T>(string json)  
         {
-            var options = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>();
+            var options = JsonSerializerOptionsBuilder.Singleton;
             return System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, options);
         }
 
@@ -163,7 +163,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             if (method == null)
             {
-                jsonText = System.Text.Json.JsonSerializer.Serialize(record, JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>());
+                jsonText = System.Text.Json.JsonSerializer.Serialize(record, JsonSerializerOptionsBuilder.Singleton);
             }
             else
             {
@@ -186,7 +186,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public async Task<T> Upsert<T>(object record)
         {
 
-            var jsonOptions = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>();
+            var jsonOptions = JsonSerializerOptionsBuilder.Singleton;
 
             string sys_id = (string)record.GetType().GetProperty("SysId").GetValue(record, null);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -9,9 +10,15 @@ namespace Blacus.ServiceNowTableAPIWrapper
     public class DateTimeOffsetConverter : JsonConverter<DateTimeOffset>
     {
 
-        public override bool CanConvert(Type t) => t == typeof(DateTimeOffset);
+        private List<string> formats = new()
+        {
+            "yyyy-MM-dd",                       // "2024-04-19"
+            "yyyy-MM-dd HH':'mm':'ss",          // 
+            "dd'-'MMM'-'yy' 'hh':'mm':'ss tt",  // 
+            "dd-MMM-yy"                         // "19-Apr-24"
+        };
 
-        private const string DefaultDateTimeFormat = "yyyy'-'MM'-'dd' 'HH':'mm':'ss.FFFFFFFK";
+        public override bool CanConvert(Type t) => t == typeof(DateTimeOffset);
 
         private DateTimeStyles _dateTimeStyles = DateTimeStyles.RoundtripKind;
         private string? _dateTimeFormat;
@@ -37,39 +44,38 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
         {
+
             string text;
 
-
-            if ((_dateTimeStyles & DateTimeStyles.AdjustToUniversal) == DateTimeStyles.AdjustToUniversal
-                    || (_dateTimeStyles & DateTimeStyles.AssumeUniversal) == DateTimeStyles.AssumeUniversal)
-            {
-                value = value.ToUniversalTime();
-            }
-
-            text = value.ToString("yyyy-MM-dd HH:mm:ss"); // ?? _dateTimeFormat ?? DefaultDateTimeFormat, Culture);
+            text = value.ToString("yyyy-MM-dd HH:mm:ss");
 
             writer.WriteStringValue(text);
+
         }
 
         public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             string? dateText = reader.GetString();
 
-            if (string.IsNullOrEmpty(dateText) == false)
-            {
-                if (!string.IsNullOrEmpty(_dateTimeFormat))
-                {
-                    return DateTimeOffset.ParseExact(dateText, _dateTimeFormat, Culture, _dateTimeStyles);
-                }
-                else
-                {
-                    return DateTimeOffset.Parse(dateText, Culture, _dateTimeStyles);
-                }
-            }
-            else
-            {
-                return default(DateTimeOffset);
-            }
+            DateTimeOffset toReturn = default(DateTimeOffset);
+            DateTimeOffset.TryParseExact(dateText, formats.ToArray(), Culture, _dateTimeStyles, out toReturn);
+            return toReturn;
+
+            //if (string.IsNullOrEmpty(dateText) == false)
+            //{
+            //    if (!string.IsNullOrEmpty(_dateTimeFormat))
+            //    {
+            //        return DateTimeOffset.ParseExact(dateText, _dateTimeFormat, Culture, _dateTimeStyles);
+            //    }
+            //    else
+            //    {
+            //        return DateTimeOffset.Parse(dateText, Culture, _dateTimeStyles);
+            //    }
+            //}
+            //else
+            //{
+            //    return default(DateTimeOffset);
+            //}
         }
 
 

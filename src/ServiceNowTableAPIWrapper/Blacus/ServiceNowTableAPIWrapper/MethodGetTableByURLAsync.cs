@@ -26,11 +26,12 @@
 
             responseString = await response.Content.ReadAsStringAsync();
 
-            var options = JsonSerializerOptionsBuilder.GetJsonSerializerOptionsByType<T>();
+            var options = JsonSerializerOptionsBuilder.Singleton;
 
             TableGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<TableGetResponse<T>>(responseString, options);
 
             result.OriginalJSON = responseString;
+            Console.WriteLine(responseString);
 
             IEnumerable<string> linkString = null;
 
