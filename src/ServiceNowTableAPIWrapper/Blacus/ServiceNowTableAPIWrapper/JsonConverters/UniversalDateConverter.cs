@@ -17,8 +17,10 @@ namespace Blacus.ServiceNowTableAPIWrapper.JsonConverters
         {
             "yyyy-MM-dd",                       // "2024-04-19"
             "yyyy-MM-dd HH':'mm':'ss",          // 
+            "yyyy-MM-dd hh':'mm':'ss tt",  // 
             "dd'-'MMM'-'yy' 'hh':'mm':'ss tt",  // 
-            "dd-MMM-yy"                         // "19-Apr-24"
+            "dd-MMM-yy",                        // "19-Apr-24"
+            "HH:mm:ss.fff"
         };
 
         private DateTimeStyles _dateTimeStyles = DateTimeStyles.RoundtripKind;
@@ -61,7 +63,7 @@ namespace Blacus.ServiceNowTableAPIWrapper.JsonConverters
         public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
 
-            string? dateText = reader.GetString();
+            string? dateText = reader.GetString(); 
 
             var methods = typeof(T).GetMethods()
                 .Where(method =>
@@ -95,7 +97,7 @@ namespace Blacus.ServiceNowTableAPIWrapper.JsonConverters
 
         }
 
-        // public static readonly T Singleton = new();
+        public static readonly UniversalDateConverter<T> Singleton = (UniversalDateConverter<T>)Activator.CreateInstance(typeof(UniversalDateConverter<T>));
 
     }
 

@@ -16,11 +16,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
                         ParseBoolStringConverter.Singleton,
                         ReferenceLinkConverter.Singleton,
                         LongConverter.Singleton,
-                        //DateTimeConverter.Singleton,
-                        //DateTimeOffsetConverter.Singleton
-                        new UniversalDateConverter<DateTime>(),
-                        new UniversalDateConverter<DateTimeOffset>(),
-                        new UniversalDateConverter<DateOnly>(),
+                        UniversalDateConverter<DateTime>.Singleton,
+                        UniversalDateConverter<DateTimeOffset>.Singleton,
+                        UniversalDateConverter<DateOnly>.Singleton,
             },
             WriteIndented = true
         });

@@ -16,6 +16,8 @@ namespace ConsoleAppServiceNowTableAPIWrapper
         static void Main(string[] args)
         {
 
+            Console.Clear();
+
             RunParseTests();
 
             try

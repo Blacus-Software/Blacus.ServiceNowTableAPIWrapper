@@ -33,7 +33,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         {
             this.Credentials = credentials;
         }
-         
+
         public async Task<List<T>> GetWithCacheAsync<T>(QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
         {
 
@@ -80,12 +80,12 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
                 toReturn.Add(returnRecord);
 
-            } 
+            }
 
             return toReturn;
 
         }
-         
+
 
         public async Task<RecordGetResponse<T>> PostAsync<T>(object record)
         {
@@ -131,7 +131,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         }
 
-        private RecordGetResponse<T> JSONDeserialize<T>(string json)  
+        private RecordGetResponse<T> JSONDeserialize<T>(string json)
         {
             var options = JsonSerializerOptionsBuilder.Singleton;
             return System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, options);
@@ -194,7 +194,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             var queryParameters = new QueryParameters<T>();
 
-            var query = queryParameters.GetQueryString;
+            var query = queryParameters.GetQueryString();
             var tableName = queryParameters.TableName;
 
             string url = string.Empty;
@@ -234,9 +234,17 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             string responseString = await response.Content.ReadAsStringAsync();
 
-            RecordGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, jsonOptions);
+            try
+            {
 
-            return result.Result;
+                RecordGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, jsonOptions);
+                return result.Result;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(responseString, ex);
+            }
 
         }
 
