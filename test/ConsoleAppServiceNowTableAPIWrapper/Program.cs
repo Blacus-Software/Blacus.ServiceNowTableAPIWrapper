@@ -18,7 +18,9 @@ namespace ConsoleAppServiceNowTableAPIWrapper
 
             Console.Clear();
 
-            RunParseTests();
+            // RunParseTests();
+
+            updateTests();
 
             try
             {
@@ -41,7 +43,19 @@ namespace ConsoleAppServiceNowTableAPIWrapper
 
         }
 
+        private static void updateTests()
+        {
 
+            string sysId = "c5847925339522107d7b92ac4f5c7bf4";
+            var results = serviceNow.GetAsync<GDDomain>(sysId).Result;
+            var record = results.Record;
+
+            // GDDomain record = new();
+            record.Domain = $"Test - {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+
+            var updateResult = serviceNow.UpsertAsync<GDDomain>(record).Result;
+
+        }
 
         static async void Run()
         {
@@ -68,11 +82,11 @@ namespace ConsoleAppServiceNowTableAPIWrapper
             var location2 = await user.Location.GetRecordAsync(serviceNow);
 
             var newLocation = new CmnLocation() { Name = Guid.NewGuid().ToString() };
-            var newLocationResponse = await serviceNow.Upsert<CmnLocation>(newLocation);
+            var newLocationResponse = await serviceNow.UpsertAsync<CmnLocation>(newLocation);
 
-            newLocationResponse.Name = $"This is a test : {Guid.NewGuid().ToString()}";
-            newLocationResponse.Street = null;
-            var changeResponse = await serviceNow.PatchAsync<CmnLocation>(newLocationResponse);
+            newLocationResponse.Record.Name = $"This is a test : {Guid.NewGuid().ToString()}";
+            newLocationResponse.Record.Street = null;
+            var changeResponse = await serviceNow.PatchAsync<CmnLocation>(newLocationResponse.Record);
 
         }
 

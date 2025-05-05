@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+// #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 
 namespace Blacus.ServiceNowTableAPIWrapper
 {
@@ -87,7 +86,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         }
 
 
-        public async Task<RecordGetResponse<T>> PostAsync<T>(object record)
+        public async Task<RecordGetResponse<T>> PostAsync<T>(IServiceNowTableModel record) where T : IServiceNowTableModel
         {
 
             Type recordType = record.GetType();
@@ -105,18 +104,8 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Post, new Uri(url), Credentials);
 
-            var method = recordType.GetMethod("ToJson");
-
-            string jsonText = null;
-
-            if (method == null)
-            {
-                jsonText = System.Text.Json.JsonSerializer.Serialize(record, JsonSerializerOptionsBuilder.Singleton);
-            }
-            else
-            {
-                jsonText = (string)method.Invoke(record, null);
-            }
+            string jsonText =
+                System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
 
             var content = new StringContent(jsonText, null, "application/json");
 
@@ -124,51 +113,38 @@ namespace Blacus.ServiceNowTableAPIWrapper
             var response = client.Send(request);
 
             string responseString = await response.Content.ReadAsStringAsync();
-
-            RecordGetResponse<T> result = JSONDeserialize<T>(responseString);
-
-            return result;
+             
+            return JSONDeserialize<T>(responseString);
 
         }
 
         private RecordGetResponse<T> JSONDeserialize<T>(string json)
         {
             var options = JsonSerializerOptionsBuilder.Singleton;
-            return System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, options);
+            var toReturn = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, options);
+            toReturn.SourceJSON = json;
+            return toReturn;
         }
 
-        public async Task<RecordGetResponse<T>> PatchAsync<T>(object record)
+        public async Task<RecordGetResponse<T>> PatchAsync<T>(IServiceNowTableModel record) where T : IServiceNowTableModel
         {
 
-            string sys_id = (string)record.GetType().GetProperty("SysId").GetValue(record, null);
-
-            if (sys_id == null)
+            if (record.SysId == null)
                 throw new KeyNotFoundException("The field sys_id is null");
-
-            Type t = record.GetType();
 
             var queryParameters = new QueryParameters<T>();
 
             var query = queryParameters.GetQueryString;
             var tableName = queryParameters.TableName;
 
-            Uri url = new($"https://{Credentials.Url}/api/now/table/{tableName}/{sys_id}?{query.ToString()}");
+            Uri url = new($"https://{Credentials.Url}/api/now/table/{tableName}/{record.SysId}?{query.ToString()}");
 
             HttpRequestMessage request = null;
 
             request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Patch, url, Credentials);
 
-            var method = t.GetMethod("ToJson");
-            string jsonText = null;
-
-            if (method == null)
-            {
-                jsonText = System.Text.Json.JsonSerializer.Serialize(record, JsonSerializerOptionsBuilder.Singleton);
-            }
-            else
-            {
-                jsonText = (string)method.Invoke(record, null);
-            }
+            string jsonText =
+                System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
 
             var content = new StringContent(jsonText, null, "application/json");
 
@@ -177,55 +153,38 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             string responseString = await response.Content.ReadAsStringAsync();
 
-            RecordGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString);
-
-            return result;
+            return JSONDeserialize<T>(responseString);
 
         }
 
-        public async Task<T> Upsert<T>(object record)
+        public async Task<RecordGetResponse<T>> UpsertAsync<T>(IServiceNowTableModel record) where T : IServiceNowTableModel
         {
-
-            var jsonOptions = JsonSerializerOptionsBuilder.Singleton;
-
-            string sys_id = (string)record.GetType().GetProperty("SysId").GetValue(record, null);
-
-            Type t = record.GetType();
 
             var queryParameters = new QueryParameters<T>();
 
             var query = queryParameters.GetQueryString();
             var tableName = queryParameters.TableName;
 
-            string url = string.Empty;
+            string url = null;
 
             HttpRequestMessage request = null;
 
-            if (sys_id == null)
+            if (record.SysId == null)
             {
                 url = $"https://{Credentials.Url}/api/now/table/{tableName}?{query.ToString()}";
                 request = new HttpRequestMessage(HttpMethod.Post, url);
             }
             else
             {
-                url = $"https://{Credentials.Url}/api/now/table/{tableName}/{sys_id}?{query.ToString()}";
+                url = $"https://{Credentials.Url}/api/now/table/{tableName}/{record.SysId}?{query.ToString()}";
                 request = new HttpRequestMessage(HttpMethod.Patch, url);
             }
 
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{Credentials.Username}:{Credentials.Password}")));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Credentials.BearerString);
 
-            var method = t.GetMethod("ToJson");
-            string jsonText = null;
-
-            if (method == null)
-            {
-                jsonText = System.Text.Json.JsonSerializer.Serialize(record, jsonOptions);
-            }
-            else
-            {
-                jsonText = (string)method.Invoke(record, null);
-            }
+            string jsonText =
+                System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
 
             var content = new StringContent(jsonText, null, "application/json");
 
@@ -234,17 +193,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             string responseString = await response.Content.ReadAsStringAsync();
 
-            try
-            {
-
-                RecordGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, jsonOptions);
-                return result.Result;
-
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(responseString, ex);
-            }
+            return JSONDeserialize<T>(responseString);
 
         }
 

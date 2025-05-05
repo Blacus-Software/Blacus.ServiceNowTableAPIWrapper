@@ -43,14 +43,14 @@ namespace Blacus.ServiceNowTableAPIWrapper
             options = JsonSerializerOptionsBuilder.Singleton;
             result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
 
-            if (result.Result != null)
+            if (result.Record != null)
             {
 
-                var resultType = result.Result.GetType();
+                var resultType = result.Record.GetType();
                 var originalJSON = resultType.GetProperty("OriginalJSON");
                 if (originalJSON != null)
                 {
-                    originalJSON.SetValue(result.Result, responseString);
+                    originalJSON.SetValue(result.Record, responseString);
                 }
 
             }
