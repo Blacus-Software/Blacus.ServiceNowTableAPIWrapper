@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 namespace Blacus.ServiceNowTableAPIWrapper
 {
 
+    [Obsolete("This property is obsolete. Use IServiceNowTableModel instead.", false)]
     public class ServiceNowTableModel : IServiceNowTableModel
     {
 
