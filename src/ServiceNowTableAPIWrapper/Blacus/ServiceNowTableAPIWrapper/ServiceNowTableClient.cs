@@ -12,17 +12,6 @@ namespace Blacus.ServiceNowTableAPIWrapper
     public partial class ServiceNowTableClient : IServiceNowTableService
     {
 
-        public IServiceNowCacheService _serviceNowCacheService = null;
-        public IServiceNowCacheService ServiceNowCacheService
-        {
-            get
-            {
-                _serviceNowCacheService ??= new ServiceNowCacheService();
-                return _serviceNowCacheService;
-            }
-            set => _serviceNowCacheService = value;
-        }
-
         private static HttpClient client = new();
         public static HttpClient Client => client;
 
@@ -33,7 +22,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             this.Credentials = credentials;
         }
 
-        public async Task<List<T>> GetWithCacheAsync<T>(QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
+        public async Task<List<T>> GetWithCacheAsync<T>(IServiceNowCacheService serviceNowCacheService, QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
         {
 
             var options = JsonSerializerOptionsBuilder.Singleton;
@@ -43,7 +32,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             List<T> toReturn = new();
 
             var sysIdOnlyQueryParameters = new QueryParameters<T>().GetQueryParameters(queryParameterOverride);
-            sysIdOnlyQueryParameters.Fields = string.Join(',', ServiceNowCacheService.CacheFields);
+            sysIdOnlyQueryParameters.Fields = string.Join(',', serviceNowCacheService.CacheFields);
 
             var sysIdList = await GetAsync<T>(sysIdOnlyQueryParameters);
 
@@ -55,9 +44,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
                 var sysIdRecord = (IServiceNowTableModel)_record;
 
-                string chacheId = $"{t.FullName}:{sysIdRecord.SysId}";
+                string cacheId = $"{t.FullName}:{sysIdRecord.SysId}";
 
-                string json = ServiceNowCacheService.CacheGet(chacheId);
+                string json = serviceNowCacheService.CacheGet(cacheId);
 
                 if (json != null)
                 {
@@ -65,15 +54,15 @@ namespace Blacus.ServiceNowTableAPIWrapper
                     cachedRecord = (IServiceNowTableModel)returnRecord;
                 }
 
-                if (!ServiceNowCacheService.Compare(cachedRecord, sysIdRecord))
+                if (!serviceNowCacheService.Compare(cachedRecord, sysIdRecord))
                 {
 
                     queryParameterOverride.Query = null;
                     RecordGetResponse<T> record = await GetAsync<T>(sysIdRecord.SysId, queryParameterOverride);
                     returnRecord = record.Record;
-                    ServiceNowCacheService.PostProcessing((IServiceNowTableModel)returnRecord);
+                    serviceNowCacheService.PostProcessing((IServiceNowTableModel)returnRecord);
                     string outputJson = System.Text.Json.JsonSerializer.Serialize<T>(returnRecord, options);
-                    ServiceNowCacheService.CacheUpdate(chacheId, outputJson);
+                    serviceNowCacheService.CacheUpdate(cacheId, outputJson);
 
                 }
 
