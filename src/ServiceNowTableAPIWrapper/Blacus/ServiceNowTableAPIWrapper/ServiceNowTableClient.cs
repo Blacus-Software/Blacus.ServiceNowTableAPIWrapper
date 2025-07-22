@@ -186,6 +186,24 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         }
 
+        public async Task<List<T>> ListAllRecordsAsync<T>(QueryParameters queryParameters) where T : IServiceNowTableModel
+        {
+
+            var toReturn = new List<T>();
+
+            var getResponse = await GetAsync<T>(queryParameters);
+            toReturn.AddRange(getResponse.Records);
+
+            while (getResponse.HasNext)
+            {
+                getResponse = await GetTableByURLAsync<T>(new System.Uri(getResponse.NextLink));
+                toReturn.AddRange(getResponse.Records);
+            }
+
+            return toReturn;
+
+        }
+
     }
 
 }
