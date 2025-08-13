@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ServiceNowTableAPIWrapper": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "G:\\My Drive\\Credentials\\kabam-it-automation-prod-ultron.json"
+      }
+    }
+  }
+}

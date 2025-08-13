@@ -33,9 +33,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class TableName : TableAttribute
+    public class ServiceNowTableName : TableAttribute
     {
-        public TableName(string requestPath) : base(requestPath) { }
+        public ServiceNowTableName(string requestPath) : base(requestPath) { }
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]

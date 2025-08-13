@@ -30,7 +30,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
                 if (propertyValue != null)
                 {
-                    query[propertyName] = propertyValue.ToString().ToLower();
+                    query[propertyName] = propertyValue.ToString();
                 }
 
             }
@@ -38,16 +38,21 @@ namespace Blacus.ServiceNowTableAPIWrapper
             if (overrideQueryParameters != null)
             {
 
-                foreach (var property in overrideQueryParameters.GetType().GetProperties().Where(p => p.Name != "Item"))
+                var overrideQueryParametersProperties = overrideQueryParameters.GetType().GetProperties().Where(p => p.Name != "Item");
+
+                foreach (var property in overrideQueryParametersProperties)
                 {
 
                     object value = property.GetValue(overrideQueryParameters);
+                    string propertyName = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? property.Name;
 
                     if (value != null)
                     {
-                        query[property.Name] = value.ToString().ToLower();
+                        query[propertyName] = value.ToString();
                     }
+
                 }
+
             }
 
             return query;
@@ -193,7 +198,15 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public NameValueCollection GetQueryString(IQueryParameters overrideQueryParameters = null) =>
             IQueryParameters.GetQueryString(this, overrideQueryParameters);
 
-        public string TableName { get => getAttributeValueString("TableName"); }
+        public string TableName
+        { //get => getAttributeValueString("TableName"); }
+            get
+            {
+                var type = typeof(T);
+                var tableNameAttribute = type.GetCustomAttributes<ServiceNowTableName>().FirstOrDefault();
+                return tableNameAttribute.Value;
+            }
+        }
 
         [JsonPropertyName("sysparm_limit")]
         public int Limit { get => getAttributeValueInt("SysparmLimit") ?? 1000; }

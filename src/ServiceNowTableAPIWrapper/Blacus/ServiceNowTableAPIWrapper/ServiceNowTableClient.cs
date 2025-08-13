@@ -12,8 +12,11 @@ namespace Blacus.ServiceNowTableAPIWrapper
     public partial class ServiceNowTableClient : IServiceNowTableService
     {
 
-        private static HttpClient client = new();
-        public static HttpClient Client => client;
+        private static HttpClient client = new(new HttpClientHandler
+        {
+            UseCookies = false
+        });
+        public static HttpClient HttpClient => client;
 
         public ServiceNowCredential Credentials { get; set; }
 
@@ -102,7 +105,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             var response = client.Send(request);
 
             string responseString = await response.Content.ReadAsStringAsync();
-             
+
             return JSONDeserialize<T>(responseString);
 
         }

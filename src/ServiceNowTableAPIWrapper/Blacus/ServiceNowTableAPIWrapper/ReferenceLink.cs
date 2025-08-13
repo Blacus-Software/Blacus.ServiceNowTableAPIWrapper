@@ -39,17 +39,20 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
     }
 
-    public class ReferenceLink<T> : ReferenceLink where T : IServiceNowTableModel
+    public abstract class ReferenceLink<T> : ReferenceLink where T : IServiceNowTableModel
     {
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-        public T Record { get; set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public T Record { get => lazyRecord.Value; }
 
-        public async Task<T> GetRecordAsync(ServiceNowTableClient serviceNow)
+        private Lazy<T> lazyRecord;
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+        public Func<Uri, T>? Get { get; set; }
+
+        public ReferenceLink()
         {
-            Record = (await serviceNow.GetRecordByURLAsync<T>(Link)).Record;
-            return Record;
+            lazyRecord = new(() => Get(Link));
         }
 
     }

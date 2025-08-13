@@ -1,7 +1,7 @@
 ﻿
 namespace Blacus.ServiceNowTableAPIWrapper
 {
-         
+
     public interface IServiceNowTableService
     {
 

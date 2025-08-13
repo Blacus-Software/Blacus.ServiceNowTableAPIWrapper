@@ -8,7 +8,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
     {
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-        [JsonPropertyName("result")] 
+        [JsonPropertyName("result")]
         public T Record { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Never)]

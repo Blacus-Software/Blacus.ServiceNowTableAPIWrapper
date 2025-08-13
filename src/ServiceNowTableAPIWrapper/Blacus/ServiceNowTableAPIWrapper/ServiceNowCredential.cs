@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 
@@ -10,9 +11,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
     public class ServiceNowCredential
     {
 
-        public string Url { get;   set; }
-        public string Username { get;   set; }
-        public string Password { get;   set; }
+        public string Url { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
 
         public ServiceNowCredential() { }
 
@@ -42,6 +43,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         public static ServiceNowCredential FromJson(string json) =>
             JsonSerializer.Deserialize<ServiceNowCredential>(json, new System.Text.Json.JsonSerializerOptions());
+
+        public static List<ServiceNowCredential> FromJsonList(string json) =>
+            JsonSerializer.Deserialize<List<ServiceNowCredential>>(json, new System.Text.Json.JsonSerializerOptions());
 
         public string ToJson() =>
             JsonSerializer.Serialize<ServiceNowCredential>(this, new System.Text.Json.JsonSerializerOptions() { WriteIndented = true });

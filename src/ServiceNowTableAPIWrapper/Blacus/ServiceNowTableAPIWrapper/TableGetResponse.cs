@@ -11,7 +11,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
         [JsonPropertyName("result")]
-        public IEnumerable<T>? Records { get; set; } 
+        public IEnumerable<T>? Records { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("status")]
@@ -22,7 +22,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public ResponseErrorMessage? Error { get; set; }
 
         [JsonExtensionData]
-        public Dictionary<string, object>?ExtensionData { get; set; }
+        public Dictionary<string, object>? ExtensionData { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public string? OriginalJSON { get; set; }

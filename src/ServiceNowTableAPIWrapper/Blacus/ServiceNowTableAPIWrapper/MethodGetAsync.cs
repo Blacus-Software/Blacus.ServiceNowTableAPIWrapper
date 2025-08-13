@@ -12,6 +12,8 @@ namespace Blacus.ServiceNowTableAPIWrapper
     public partial class ServiceNowTableClient
     {
 
+        public static bool UseStreaming { get; set; } = false;
+
         public async Task<RecordGetResponse<T>> GetAsync<T>(string sys_id, QueryParameters? queryParameterOverride = null)
             where T : IServiceNowTableModel => await GetAsync<T>(Credentials, sys_id, queryParameterOverride);
 
@@ -26,9 +28,10 @@ namespace Blacus.ServiceNowTableAPIWrapper
             string responseString = null;
 
             Type t = typeof(T);
+
             var queryParameters = new QueryParameters<T>();
 
-            var query = queryParameters.GetQueryString(queryParameterOverride); 
+            var query = queryParameters.GetQueryString(queryParameterOverride);
 
             Uri url = new($"https://{credential.Url}/api/now/table/{queryParameters.TableName}/{sys_id}?{query.ToString()}");
 
@@ -36,23 +39,31 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Get, url, credential);
 
-            response = ServiceNowTableClient.Client.Send(request);
+            response = ServiceNowTableClient.HttpClient.Send(request);
 
-            responseString = await response.Content.ReadAsStringAsync();
-
-            options = JsonSerializerOptionsBuilder.Singleton;
-            result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
-
-            if (result.Record != null)
+            if (UseStreaming)
             {
+                options = JsonSerializerOptionsBuilder.Singleton;
+                result = JsonSerializer.Deserialize<RecordGetResponse<T>>(await response.Content.ReadAsStreamAsync(), options);
+            }
+            else
+            {
+                responseString = await response.Content.ReadAsStringAsync();
 
-                var resultType = result.Record.GetType();
-                var originalJSON = resultType.GetProperty("OriginalJSON");
-                if (originalJSON != null)
+                options = JsonSerializerOptionsBuilder.Singleton;
+                result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
+
+                if (result.Record != null)
                 {
-                    originalJSON.SetValue(result.Record, responseString);
-                }
 
+                    var resultType = result.Record.GetType();
+                    var originalJSON = resultType.GetProperty("OriginalJSON");
+                    if (originalJSON != null)
+                    {
+                        originalJSON.SetValue(result.Record, responseString);
+                    }
+
+                }
             }
 
             return result;
@@ -62,13 +73,11 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public static async Task<TableGetResponse<T>> GetAsync<T>(ServiceNowCredential credential, QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
         {
 
-            QueryParameters queryParameters = new QueryParameters<T>().GetQueryParameters(queryParameterOverride); 
+            QueryParameters queryParameters = new QueryParameters<T>().GetQueryParameters(queryParameterOverride);
 
-            var query = queryParameters.GetQueryString();
+            Uri url = new($"https://{credential.Url}/api/now/table/{((QueryParameters)queryParameters).TableName}");
 
-            Uri url = new($"https://{credential.Url}/api/now/table/{((QueryParameters)queryParameters).TableName}?{queryParameters.GetQueryString()}");
-
-            var toReturn = await ServiceNowTableClient.GetTableByURLAsync<T>(credential, url);
+            var toReturn = await ServiceNowTableClient.GetTableByURLAsync<T>(credential, url, queryParameterOverride);
 
             return toReturn;
 

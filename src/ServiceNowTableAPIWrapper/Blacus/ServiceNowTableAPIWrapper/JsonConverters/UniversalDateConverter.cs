@@ -63,7 +63,7 @@ namespace Blacus.ServiceNowTableAPIWrapper.JsonConverters
         public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
 
-            string? dateText = reader.GetString(); 
+            string? dateText = reader.GetString();
 
             var methods = typeof(T).GetMethods()
                 .Where(method =>

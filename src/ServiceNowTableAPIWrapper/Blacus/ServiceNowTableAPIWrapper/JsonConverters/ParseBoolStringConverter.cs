@@ -44,13 +44,13 @@ namespace Blacus.ServiceNowTableAPIWrapper
             var value = reader;
             bool b;
 
-            if(value.TokenType== JsonTokenType.True || value.TokenType == JsonTokenType.False)
+            if (value.TokenType == JsonTokenType.True || value.TokenType == JsonTokenType.False)
             {
                 b = value.GetBoolean();
                 return b;
             }
 
-            if (Boolean.TryParse( value.GetString(), out b))
+            if (Boolean.TryParse(value.GetString(), out b))
             {
                 return b;
             }

@@ -10,27 +10,37 @@
     public partial class ServiceNowTableClient
     {
 
-        public async Task<TableGetResponse<T>> GetTableByURLAsync<T>(Uri link) where T : IServiceNowTableModel
+        public async Task<TableGetResponse<T>> GetTableByURLAsync<T>(Uri link, QueryParameters queryParameters = null) where T : IServiceNowTableModel
             => await ServiceNowTableClient.GetTableByURLAsync<T>(Credentials, link);
 
-        public static async Task<TableGetResponse<T>> GetTableByURLAsync<T>(ServiceNowCredential credential, Uri url) where T : IServiceNowTableModel
+        public static async Task<TableGetResponse<T>> GetTableByURLAsync<T>(ServiceNowCredential credential, Uri url, QueryParameters queryParameterOverride = null) where T : IServiceNowTableModel
         {
 
+            Uri requestUri = url;
             string responseString = null;
-
             LinkHeader linkHeader = null;
 
-            var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Get, url, credential); 
+            if (url.Query.Length == 0)
+            {
+                var queryParameters = new QueryParameters<T>();
+                var query = queryParameters.GetQueryString(queryParameterOverride);
+                requestUri = new($"{url}?{query.ToString()}");
+            }
 
-            HttpResponseMessage response = ServiceNowTableClient.Client.Send(request); 
+            var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Get, requestUri, credential);
+
+            HttpResponseMessage response = ServiceNowTableClient.HttpClient.Send(request);
 
             responseString = await response.Content.ReadAsStringAsync();
 
+            if (!response.IsSuccessStatusCode)
+                throw new Exception(responseString);
+
             var options = JsonSerializerOptionsBuilder.Singleton;
 
-            TableGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<TableGetResponse<T>>(responseString, options);
-
-            result.OriginalJSON = responseString; 
+            TableGetResponse<T> result = null;
+            result = System.Text.Json.JsonSerializer.Deserialize<TableGetResponse<T>>(responseString, options);
+            result.OriginalJSON = responseString;
 
             IEnumerable<string> linkString = null;
 
@@ -40,7 +50,7 @@
                 linkHeader = LinkHeader.LinksFromHeader(linkString.First());
                 result.NextLink = linkHeader.NextLink;
 
-            } 
+            }
 
             return result;
 

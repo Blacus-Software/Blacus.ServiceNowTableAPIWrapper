@@ -21,14 +21,14 @@ namespace Blacus.ServiceNowTableAPIWrapper
             Type t = typeof(T);
             var queryParameters = new QueryParameters<T>();
 
-            var query = queryParameters.GetQueryString;
+            var query = queryParameters.GetQueryString();
 
             string url = $"{link.ToString()}?{query.ToString()}";
             string responseString = null;
 
             var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Get, new Uri(url), credential);
 
-            var response = ServiceNowTableClient.Client.Send(request);
+            var response = ServiceNowTableClient.HttpClient.Send(request);
 
             responseString = await response.Content.ReadAsStringAsync();
 
@@ -44,33 +44,3 @@ namespace Blacus.ServiceNowTableAPIWrapper
     }
 
 }
-
-//{
-
-//    Type t = typeof(T);
-//    var queryParameters = new QueryParameters<T>();
-
-//    var query = queryParameters.GetQueryString;
-
-//    string url = $"{link.ToString()}?{query.ToString()}";
-
-//    string responseString = null;
-
-//    LinkHeader linkHeader = null;
-
-//    var request = new HttpRequestMessage(HttpMethod.Get, url);
-
-//    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-//    request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{Credentials.Username}:{Credentials.Password}")));
-
-//    var response = await client.SendAsync(request);
-
-//    responseString = await response.Content.ReadAsStringAsync();
-
-//    var options = ServiceNowTableModel.GetJsonSerializerOptionsByType<T>();
-//    RecordGetResponse<T> result = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
-//    result.OriginalJSON = responseString;
-
-//    return result;
-
-//}
