@@ -18,9 +18,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
         });
         public static HttpClient HttpClient => client;
 
-        public ServiceNowCredential Credentials { get; set; }
+        public IServiceNowCredential Credentials { get; set; }
 
-        public ServiceNowTableClient(ServiceNowCredential credentials)
+        public ServiceNowTableClient(IServiceNowCredential credentials)
         {
             this.Credentials = credentials;
         }
@@ -164,16 +164,19 @@ namespace Blacus.ServiceNowTableAPIWrapper
             if (record.SysId == null)
             {
                 url = $"https://{Credentials.Url}/api/now/table/{tableName}?{query.ToString()}";
-                request = new HttpRequestMessage(HttpMethod.Post, url);
+                // request = new HttpRequestMessage(HttpMethod.Post, url);
+                request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Post, url, Credentials);
             }
             else
             {
                 url = $"https://{Credentials.Url}/api/now/table/{tableName}/{record.SysId}?{query.ToString()}";
-                request = new HttpRequestMessage(HttpMethod.Patch, url);
+                // request = new HttpRequestMessage(HttpMethod.Patch, url);
+                request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Patch, url, Credentials);
             }
 
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Credentials.BearerString);
+            //request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            //request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Credentials.BearerString);
 
             string jsonText =
                 System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);

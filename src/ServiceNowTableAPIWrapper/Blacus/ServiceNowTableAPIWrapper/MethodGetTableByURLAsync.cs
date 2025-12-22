@@ -13,7 +13,7 @@
         public async Task<TableGetResponse<T>> GetTableByURLAsync<T>(Uri link, QueryParameters queryParameters = null) where T : IServiceNowTableModel
             => await ServiceNowTableClient.GetTableByURLAsync<T>(Credentials, link);
 
-        public static async Task<TableGetResponse<T>> GetTableByURLAsync<T>(ServiceNowCredential credential, Uri url, QueryParameters queryParameterOverride = null) where T : IServiceNowTableModel
+        public static async Task<TableGetResponse<T>> GetTableByURLAsync<T>(IServiceNowCredential credential, Uri url, QueryParameters queryParameterOverride = null) where T : IServiceNowTableModel
         {
 
             Uri requestUri = url;

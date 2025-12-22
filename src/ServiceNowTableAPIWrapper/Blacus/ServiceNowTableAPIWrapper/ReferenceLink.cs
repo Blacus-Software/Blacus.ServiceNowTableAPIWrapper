@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -22,7 +23,19 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("value")]
-        public string? Value { get; set; }
+        public string? Value
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    value = Link.ToString().Split("/").LastOrDefault();
+                }
+                return value;
+            }
+            set => this.value = value;
+        }
+        private string? value;
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         [JsonPropertyName("display_value")]

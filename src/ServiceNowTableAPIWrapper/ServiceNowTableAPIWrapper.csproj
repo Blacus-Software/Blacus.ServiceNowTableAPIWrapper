@@ -7,7 +7,7 @@
 		<RootNamespace />
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>Blacus ServiceNow Table API Wrapper</Title>
-		<Version>8.0.17-beta</Version>
+		<Version>8.0.19-beta</Version>
 		<PackageId>Blacus.$(AssemblyName)</PackageId>
 		<Authors>Blacus</Authors>
 		<Product>Blacus.$(AssemblyName)</Product>

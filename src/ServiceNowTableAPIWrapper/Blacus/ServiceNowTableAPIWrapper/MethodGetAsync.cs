@@ -20,7 +20,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public async Task<TableGetResponse<T>> GetAsync<T>(QueryParameters? queryParameterOverride = null)
             where T : IServiceNowTableModel => await GetAsync<T>(Credentials, queryParameterOverride);
 
-        public static async Task<RecordGetResponse<T>> GetAsync<T>(ServiceNowCredential credential, string sys_id, QueryParameters? queryParameterOverride = null)
+        public static async Task<RecordGetResponse<T>> GetAsync<T>(IServiceNowCredential credential, string sys_id, QueryParameters? queryParameterOverride = null)
         {
 
             JsonSerializerOptions options = null;
@@ -70,7 +70,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         }
 
-        public static async Task<TableGetResponse<T>> GetAsync<T>(ServiceNowCredential credential, QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
+        public static async Task<TableGetResponse<T>> GetAsync<T>(IServiceNowCredential credential, QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
         {
 
             QueryParameters queryParameters = new QueryParameters<T>().GetQueryParameters(queryParameterOverride);

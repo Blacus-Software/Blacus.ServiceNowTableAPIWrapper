@@ -15,7 +15,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public async Task<RecordGetResponse<T>> GetRecordByURLAsync<T>(Uri link)
              where T : IServiceNowTableModel => await GetRecordByURLAsync<T>(Credentials, link);
 
-        public static async Task<RecordGetResponse<T>> GetRecordByURLAsync<T>(ServiceNowCredential credential, Uri link)
+        public static async Task<RecordGetResponse<T>> GetRecordByURLAsync<T>(IServiceNowCredential credential, Uri link)
         {
 
             Type t = typeof(T);
