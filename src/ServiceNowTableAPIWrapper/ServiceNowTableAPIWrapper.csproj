@@ -7,13 +7,14 @@
 		<RootNamespace />
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>Blacus ServiceNow Table API Wrapper</Title>
-		<Version>8.0.19-beta</Version>
+		<Version>10.0.1-beta</Version>
 		<PackageId>Blacus.$(AssemblyName)</PackageId>
 		<Authors>Blacus</Authors>
 		<Product>Blacus.$(AssemblyName)</Product>
 		<PackageOutputPath>$(OutputPath)</PackageOutputPath>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/Blacus-Software/Blacus.ServiceNowTableAPIWrapper</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
