@@ -37,7 +37,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public ServiceNowTableClient? Service { get; set; }
 
         public async Task<TableGetResponse<T>> GetNextPageAsync() =>
-           await Service.GetTableByURLAsync<T>(new Uri(NextLink));
+            Service != null && NextLink != null
+                ? await Service.GetTableByURLAsync<T>(new Uri(NextLink))
+                : throw new InvalidOperationException("Service client or NextLink is null.");
 
     }
 

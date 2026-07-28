@@ -7,15 +7,13 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Web;
 
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-
 namespace Blacus.ServiceNowTableAPIWrapper
 {
 
     public interface IQueryParameters
     {
 
-        public static NameValueCollection GetQueryString(IQueryParameters queryParameters, IQueryParameters overrideQueryParameters = null)
+        public static NameValueCollection GetQueryString(IQueryParameters queryParameters, IQueryParameters? overrideQueryParameters = null)
         {
 
             var query = HttpUtility.ParseQueryString(new UriBuilder() { Port = -1 }.Query);
@@ -26,7 +24,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             {
 
                 string propertyName = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? property.Name;
-                object propertyValue = property.GetValue(queryParameters);
+                object? propertyValue = property.GetValue(queryParameters);
 
                 if (propertyValue != null)
                 {
@@ -43,7 +41,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
                 foreach (var property in overrideQueryParametersProperties)
                 {
 
-                    object value = property.GetValue(overrideQueryParameters);
+                    object? value = property.GetValue(overrideQueryParameters);
                     string propertyName = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? property.Name;
 
                     if (value != null)
@@ -80,7 +78,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         public QueryParameters Clone() => Clone(this);
 
-        public NameValueCollection GetQueryString(IQueryParameters overrideQueryParameters = null) =>
+        public NameValueCollection GetQueryString(IQueryParameters? overrideQueryParameters = null) =>
             IQueryParameters.GetQueryString(this, overrideQueryParameters);
 
         public string? TableName { get; set; }
@@ -118,38 +116,34 @@ namespace Blacus.ServiceNowTableAPIWrapper
         [JsonPropertyName("sysparm_suppress_pagination_header")]
         public string? SuppressPaginationHeader { get; set; }
 
-        public object this[string name]
+        public object? this[string name]
         {
-            get =>
-                this.GetType().GetProperty(name).GetValue(this);
-
-            set =>
-                this.GetType().GetProperty(name).SetValue(this, value);
+            get => this.GetType().GetProperty(name)?.GetValue(this);
+            set => this.GetType().GetProperty(name)?.SetValue(this, value);
         }
 
     }
 
-    public class QueryParameters<T> : IQueryParameters
+    public class QueryParameters<T> : QueryParameters
     {
 
-        public object this[string name]
+        public new object? this[string name]
         {
-            get
-            {
-                return this.GetType().GetProperty(name).GetValue(this);
-            }
+            get => this.GetType().GetProperty(name)?.GetValue(this);
+            set => this.GetType().GetProperty(name)?.SetValue(this, value);
         }
 
-        private static ConcurrentDictionary<string, QueryParameters> _paramiterCache = new();
+        private static ConcurrentDictionary<string, QueryParameters> _parameterCache = new();
         private static ConcurrentDictionary<string, string> _fieldsCache = new();
 
         public QueryParameters GetQueryParameters(QueryParameters? queryParameterOverride = null)
         {
 
-            QueryParameters toReturn = null;
+            QueryParameters? toReturn = null;
             Type typeSource = this.GetType();
+            string cacheKey = typeSource.FullName ?? typeSource.Name;
 
-            if (!_paramiterCache.TryGetValue(typeSource.FullName, out toReturn))
+            if (!_parameterCache.TryGetValue(cacheKey, out toReturn))
             {
 
                 toReturn = new QueryParameters();
@@ -160,31 +154,27 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
                 foreach (var prop in props.Where(p => p.Name != "Item"))
                 {
-                    object sourceValue;
-                    sourceValue = typeSource.GetProperty(prop.Name).GetValue(this, null);
+                    object? sourceValue = typeSource.GetProperty(prop.Name)?.GetValue(this, null);
                     prop.SetValue(toReturn, sourceValue);
                 }
 
-                _paramiterCache[typeSource.FullName] = toReturn.Clone();
+                _parameterCache[cacheKey] = toReturn.Clone();
 
             }
+
+            toReturn = toReturn.Clone();
 
             if (queryParameterOverride != null)
             {
 
-                if (queryParameterOverride != null)
+                foreach (var property in queryParameterOverride.GetType().GetProperties().Where(p => p.Name != "Item"))
                 {
 
-                    foreach (var property in queryParameterOverride.GetType().GetProperties().Where(p => p.Name != "Item"))
+                    object? value = property.GetValue(queryParameterOverride);
+
+                    if (value != null)
                     {
-
-                        object value = property.GetValue(queryParameterOverride);
-
-                        if (value != null)
-                        {
-                            toReturn[property.Name] = value;
-                        }
-
+                        toReturn[property.Name] = value;
                     }
 
                 }
@@ -195,69 +185,70 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         }
 
-        public NameValueCollection GetQueryString(IQueryParameters overrideQueryParameters = null) =>
+        public new NameValueCollection GetQueryString(IQueryParameters? overrideQueryParameters = null) =>
             IQueryParameters.GetQueryString(this, overrideQueryParameters);
 
-        public string TableName
-        { //get => getAttributeValueString("TableName"); }
+        public new string TableName
+        {
             get
             {
                 var type = typeof(T);
-                var tableNameAttribute = type.GetCustomAttributes<ServiceNowTableName>().FirstOrDefault();
-                return tableNameAttribute.Value;
+                var tableNameAttribute = type.GetCustomAttribute<ServiceNowTableName>();
+                return tableNameAttribute?.Value ?? string.Empty;
             }
         }
 
         [JsonPropertyName("sysparm_limit")]
-        public int Limit { get => getAttributeValueInt("SysparmLimit") ?? 1000; }
+        public new int Limit { get => getAttributeValueInt("SysparmLimit") ?? 1000; }
 
         [JsonPropertyName("sysparm_view")]
-        public string View { get => getAttributeValueString("SysparmView"); }
+        public new string? View { get => getAttributeValueString("SysparmView"); }
 
         [JsonPropertyName("sysparm_query")]
-        public string Query { get => getAttributeValueString("SysparmQuery"); }
+        public new string? Query { get => getAttributeValueString("SysparmQuery"); }
 
         [JsonPropertyName("sysparm_offset")]
-        public string Offset { get => getAttributeValueString("SysparmOffset"); }
+        public new string? Offset { get => getAttributeValueString("SysparmOffset"); }
 
         [JsonPropertyName("sysparm_no_count")]
-        public string NoCount { get => getAttributeValueString("SysparmNoCount"); }
+        public new string? NoCount { get => getAttributeValueString("SysparmNoCount"); }
 
         [JsonPropertyName("sysparm_query_category")]
-        public string QueryCategory { get => getAttributeValueString("sysparm_query_category"); }
+        public new string? QueryCategory { get => getAttributeValueString("sysparm_query_category"); }
 
         [JsonPropertyName("sysparm_query_no_domain")]
-        public string QueryNoDomain { get => getAttributeValueString("sysparm_query_no_domain"); }
+        public new string? QueryNoDomain { get => getAttributeValueString("sysparm_query_no_domain"); }
 
         [JsonPropertyName("sysparm_display_value")]
-        public string DisplayValue { get => getAttributeValueString("SysParmDisplayValue"); }
+        public new string? DisplayValue { get => getAttributeValueString("SysParmDisplayValue"); }
 
         [JsonPropertyName("sysparm_exclude_reference_link")]
-        public string ExcludeReferenceLink { get => getAttributeValueString("SysParmExcludeReferenceLink"); }
+        public new string? ExcludeReferenceLink { get => getAttributeValueString("SysParmExcludeReferenceLink"); }
 
         [JsonPropertyName("sysparm_suppress_pagination_header")]
-        public string SuppressPaginationHeader { get => getAttributeValueString("sysparm_suppress_pagination_header"); }
+        public new string? SuppressPaginationHeader { get => getAttributeValueString("sysparm_suppress_pagination_header"); }
 
         [JsonPropertyName("sysparm_fields")]
-        public string Fields
+        public new string? Fields
         {
             get
             {
 
-                string toReturn = string.Empty;
+                string? toReturn = string.Empty;
 
                 var sysParmFields = getAttributeValueString("SysParmFields");
                 if (sysParmFields != null)
                     return sysParmFields;
 
-                var sysParmFieldsDisableAuto = path.SingleOrDefault(attrib => attrib.GetType().Name == "SysParmFieldsDisableAuto");
+                var sysParmFieldsDisableAuto = path.FirstOrDefault(attrib => attrib.GetType().Name == "SysParmFieldsDisableAuto");
 
                 if (sysParmFieldsDisableAuto == null)
                 {
 
                     Type t = typeof(T);
+                    string fieldCacheKey = t.FullName ?? t.Name;
 
-                    if (!_fieldsCache.TryGetValue(t.FullName, out toReturn))
+                    if (!_fieldsCache.TryGetValue(fieldCacheKey, out toReturn))
                     {
 
                         List<string> fields = new();
@@ -265,12 +256,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
                         foreach (var prop in t.GetProperties())
                         {
 
-                            var jsonPropertyNameAttribute = prop.CustomAttributes
-                                .SingleOrDefault(prop => prop.AttributeType.Name == "JsonPropertyNameAttribute")?
-                                .ConstructorArguments
-                                .FirstOrDefault()
-                                .Value
-                                .ToString();
+                            var jsonPropertyNameAttribute = prop.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name;
 
                             if (jsonPropertyNameAttribute != null)
                                 fields.Add(jsonPropertyNameAttribute);
@@ -279,7 +265,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
                         toReturn = string.Join(",", fields);
 
-                        _fieldsCache[t.FullName] = toReturn;
+                        _fieldsCache[fieldCacheKey] = toReturn;
 
                     }
 
@@ -297,12 +283,12 @@ namespace Blacus.ServiceNowTableAPIWrapper
             try
             {
 
-                var attrib = path.SingleOrDefault(attrib => attrib.GetType().Name == name);
+                var attrib = path.FirstOrDefault(attrib => attrib.GetType().Name == name);
 
                 if (attrib == null)
                     return null;
 
-                object value = attrib.GetType().GetProperty("Value")?.GetValue(attrib);
+                object? value = attrib.GetType().GetProperty("Value")?.GetValue(attrib);
 
                 if (null != value)
                 {
@@ -317,15 +303,15 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         }
 
-        private string getAttributeValueString(string name)
+        private string? getAttributeValueString(string name)
         {
 
             try
             {
 
-                var attrib = path.SingleOrDefault(attrib => attrib.GetType().Name == name);
+                var attrib = path.FirstOrDefault(attrib => attrib.GetType().Name == name);
 
-                return attrib?.GetType().GetProperty("Value")?.GetValue(attrib).ToString();
+                return attrib?.GetType().GetProperty("Value")?.GetValue(attrib)?.ToString();
 
             }
             catch (Exception)
@@ -360,4 +346,3 @@ namespace Blacus.ServiceNowTableAPIWrapper
     }
 
 }
-

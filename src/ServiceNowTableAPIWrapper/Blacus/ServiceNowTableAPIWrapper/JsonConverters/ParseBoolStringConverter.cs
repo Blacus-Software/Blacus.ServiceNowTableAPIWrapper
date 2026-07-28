@@ -13,13 +13,19 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         public override bool Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var value = reader.GetString();
-            bool b;
-            if (Boolean.TryParse(value, out b))
+            if (reader.TokenType == JsonTokenType.True) return true;
+            if (reader.TokenType == JsonTokenType.False) return false;
+
+            if (reader.TokenType == JsonTokenType.String)
             {
-                return b;
+                var value = reader.GetString();
+                if (bool.TryParse(value, out bool b))
+                {
+                    return b;
+                }
             }
-            throw new Exception("Cannot unmarshal type bool");
+
+            throw new JsonException("Cannot unmarshal type bool");
         }
 
         public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options)
@@ -41,29 +47,33 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public override bool? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
 
-            var value = reader;
-            bool b;
+            if (reader.TokenType == JsonTokenType.Null)
+                return null;
 
-            if (value.TokenType == JsonTokenType.True || value.TokenType == JsonTokenType.False)
+            if (reader.TokenType == JsonTokenType.True || reader.TokenType == JsonTokenType.False)
             {
-                b = value.GetBoolean();
+                return reader.GetBoolean();
+            }
+
+            if (reader.TokenType == JsonTokenType.String && bool.TryParse(reader.GetString(), out bool b))
+            {
                 return b;
             }
 
-            if (Boolean.TryParse(value.GetString(), out b))
-            {
-                return b;
-            }
-
-            throw new Exception("Cannot unmarshal type bool");
+            throw new JsonException("Cannot unmarshal type bool?");
 
         }
 
         public override void Write(Utf8JsonWriter writer, bool? value, JsonSerializerOptions options)
         {
+            if (!value.HasValue)
+            {
+                writer.WriteNullValue();
+                return;
+            }
+
             var boolString = value.Value ? "true" : "false";
-            JsonSerializer.Serialize(writer, boolString, options);
-            return;
+            writer.WriteStringValue(boolString);
         }
 
         public static readonly ParseNullBoolStringConverter Singleton = new();

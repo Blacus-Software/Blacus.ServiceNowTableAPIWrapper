@@ -32,10 +32,16 @@ namespace Blacus.ServiceNowTableAPIWrapper
     {
     }
 
-    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = true)]
     public class ServiceNowTableName : TableAttribute
     {
         public ServiceNowTableName(string requestPath) : base(requestPath) { }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = true)]
+    public class TableNameAttribute : ServiceNowTableName
+    {
+        public TableNameAttribute(string requestPath) : base(requestPath) { }
     }
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]

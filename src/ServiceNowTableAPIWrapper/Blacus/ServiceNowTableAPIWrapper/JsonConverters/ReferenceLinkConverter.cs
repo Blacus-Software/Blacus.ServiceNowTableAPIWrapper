@@ -14,36 +14,34 @@ namespace Blacus.ServiceNowTableAPIWrapper
         {
             switch (reader.TokenType)
             {
+                case JsonTokenType.Null:
+                    return null;
                 case JsonTokenType.String:
                     var stringValue = reader.GetString();
-                    return null;
+                    return new ReferenceLink { Value = stringValue };
                 case JsonTokenType.StartObject:
-                    var objectValue = JsonSerializer.Deserialize<ReferenceLink>(ref reader);
+                    var objectValue = JsonSerializer.Deserialize<ReferenceLink>(ref reader, options);
                     return objectValue;
             }
-            throw new Exception("Cannot unmarshal type LocationUnion");
+            throw new JsonException("Cannot unmarshal type ReferenceLink");
         }
 
         public override void Write(Utf8JsonWriter writer, ReferenceLink value, JsonSerializerOptions options)
         {
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
 
             if (value.Value != null)
             {
-
                 JsonSerializer.Serialize(writer, value.Value, options);
-                return;
-
             }
             else
             {
-
                 JsonSerializer.Serialize(writer, value.DisplayValue, options);
-                return;
-
             }
-
-            throw new Exception("Cannot marshal type LocationUnion");
-
         }
 
         public static readonly ReferenceLinkConverter Singleton = new ReferenceLinkConverter();
@@ -57,47 +55,42 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         public override ReferenceLink<T>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-
             switch (reader.TokenType)
             {
+                case JsonTokenType.Null:
+                    return null;
                 case JsonTokenType.String:
                     var stringValue = reader.GetString();
                     return null;
                 case JsonTokenType.StartObject:
-                    var objectValue = JsonSerializer.Deserialize<ReferenceLink<T>>(ref reader);
+                    var objectValue = JsonSerializer.Deserialize<ReferenceLink<T>>(ref reader, options);
                     return objectValue;
             }
-            throw new Exception("Cannot unmarshal type LocationUnion");
+            throw new JsonException($"Cannot unmarshal type ReferenceLink<{typeof(T).Name}>");
         }
 
         public override void Write(Utf8JsonWriter writer, ReferenceLink<T> value, JsonSerializerOptions options)
         {
+            if (value == null)
+            {
+                writer.WriteNullValue();
+                return;
+            }
 
             if (value.Record != null)
             {
-
-                JsonSerializer.Serialize(writer, value.Record.GetType().GetProperty("SysId").GetValue(value.Record), options);
+                JsonSerializer.Serialize(writer, value.Record.SysId, options);
                 return;
-
             }
 
             if (value.Value != null)
             {
-
                 JsonSerializer.Serialize(writer, value.Value, options);
-                return;
-
             }
             else
             {
-
                 JsonSerializer.Serialize(writer, value.DisplayValue, options);
-                return;
-
             }
-
-            throw new Exception("Cannot marshal type LocationUnion");
-
         }
 
         public static readonly ReferenceLinkConverter<T> Singleton = new();

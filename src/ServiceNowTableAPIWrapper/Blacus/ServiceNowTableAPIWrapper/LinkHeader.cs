@@ -1,64 +1,60 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Blacus.ServiceNowTableAPIWrapper
 {
-
     internal class LinkHeader
     {
-
         public string? FirstLink { get; set; }
         public string? PrevLink { get; set; }
         public string? NextLink { get; set; }
         public string? LastLink { get; set; }
 
-        public static LinkHeader? LinksFromHeader(string linkHeaderStr)
+        public static LinkHeader? LinksFromHeader(string? linkHeaderStr)
         {
-
-            LinkHeader linkHeader = null;
-
-            if (!string.IsNullOrWhiteSpace(linkHeaderStr))
+            if (string.IsNullOrWhiteSpace(linkHeaderStr))
             {
-                string[] linkStrings = linkHeaderStr.Split(',');
+                return null;
+            }
 
-                if (linkStrings != null && linkStrings.Any())
+            string[] linkStrings = linkHeaderStr.Split(',');
+            if (linkStrings == null || !linkStrings.Any())
+            {
+                return null;
+            }
+
+            var linkHeader = new LinkHeader();
+
+            foreach (string linkString in linkStrings)
+            {
+                var relMatch = Regex.Match(linkString, "(?<=rel=\"?)[a-zA-Z]+(?=\"?)", RegexOptions.IgnoreCase);
+                var linkMatch = Regex.Match(linkString, "(?<=<).+?(?=>)", RegexOptions.IgnoreCase);
+
+                if (relMatch.Success && linkMatch.Success)
                 {
-                    linkHeader = new LinkHeader();
+                    string rel = relMatch.Value.ToUpperInvariant();
+                    string link = linkMatch.Value;
 
-                    foreach (string linkString in linkStrings)
+                    switch (rel)
                     {
-                        var relMatch = Regex.Match(linkString, "(?<=rel=\").+?(?=\")", RegexOptions.IgnoreCase);
-                        var linkMatch = Regex.Match(linkString, "(?<=<).+?(?=>)", RegexOptions.IgnoreCase);
-
-                        if (relMatch.Success && linkMatch.Success)
-                        {
-                            string rel = relMatch.Value.ToUpper();
-                            string link = linkMatch.Value;
-
-                            switch (rel)
-                            {
-                                case "FIRST":
-                                    linkHeader.FirstLink = link;
-                                    break;
-                                case "PREV":
-                                    linkHeader.PrevLink = link;
-                                    break;
-                                case "NEXT":
-                                    linkHeader.NextLink = link;
-                                    break;
-                                case "LAST":
-                                    linkHeader.LastLink = link;
-                                    break;
-                            }
-                        }
+                        case "FIRST":
+                            linkHeader.FirstLink = link;
+                            break;
+                        case "PREV":
+                            linkHeader.PrevLink = link;
+                            break;
+                        case "NEXT":
+                            linkHeader.NextLink = link;
+                            break;
+                        case "LAST":
+                            linkHeader.LastLink = link;
+                            break;
                     }
                 }
             }
 
             return linkHeader;
-
         }
-
     }
-
 }

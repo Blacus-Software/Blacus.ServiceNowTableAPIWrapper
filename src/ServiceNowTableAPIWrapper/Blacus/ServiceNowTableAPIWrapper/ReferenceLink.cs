@@ -5,20 +5,16 @@ using System.Threading.Tasks;
 
 namespace Blacus.ServiceNowTableAPIWrapper
 {
-
     public class ReferenceLink
     {
-
         public override string ToString()
         {
-
             if (DisplayValue != null)
             {
                 return DisplayValue;
             }
 
-            return base.ToString();
-
+            return base.ToString() ?? string.Empty;
         }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -29,7 +25,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    value = Link.ToString().Split("/").LastOrDefault();
+                    value = Link?.ToString()?.Split('/')?.LastOrDefault();
                 }
                 return value;
             }
@@ -45,29 +41,31 @@ namespace Blacus.ServiceNowTableAPIWrapper
         [JsonPropertyName("link")]
         public Uri? Link { get; set; }
 
-        public async Task<T> GetRecordAsync<T>(ServiceNowTableClient serviceNow) where T : IServiceNowTableModel
+        public async Task<T?> GetRecordAsync<T>(ServiceNowTableClient serviceNow) where T : IServiceNowTableModel
         {
-            return (await serviceNow.GetRecordByURLAsync<T>(Link)).Record;
-        }
+            if (Link == null)
+                throw new InvalidOperationException("Reference link URL is null.");
 
+            var response = await serviceNow.GetRecordByURLAsync<T>(Link);
+            return response.Record;
+        }
     }
 
     public abstract class ReferenceLink<T> : ReferenceLink where T : IServiceNowTableModel
     {
-
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-        public T Record { get => lazyRecord.Value; }
+        public T? Record { get => lazyRecord.Value; }
 
-        private Lazy<T> lazyRecord;
+        private Lazy<T?> lazyRecord;
 
         [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
         public Func<Uri, T>? Get { get; set; }
 
         public ReferenceLink()
         {
-            lazyRecord = new(() => Get(Link));
+            lazyRecord = new(() => Get != null && Link != null ? Get(Link) : default);
         }
 
+        public Task<T?> GetRecordAsync(ServiceNowTableClient serviceNow) => GetRecordAsync<T>(serviceNow);
     }
-
 }
