@@ -37,7 +37,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    value = Link?.ToString()?.Split('/')?.LastOrDefault();
+                    value = Link?.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
                 }
                 return value;
             }

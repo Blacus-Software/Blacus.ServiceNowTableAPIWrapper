@@ -23,7 +23,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public Task<RecordGetResponse<T>> GetAsync<T>(
             string sys_id,
             QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
-            => GetAsync<T>(Credentials, _httpClient, sys_id, queryParameterOverride, JsonSerializerOptions, default);
+            => GetAsync<T>(Credentials, _httpClient, sys_id, queryParameterOverride, default);
 
         /// <summary>
         /// Asynchronously retrieves a single record by <c>sys_id</c> with cancellation support.
@@ -37,7 +37,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             string sys_id,
             QueryParameters? queryParameterOverride,
             CancellationToken cancellationToken) where T : IServiceNowTableModel
-            => GetAsync<T>(Credentials, _httpClient, sys_id, queryParameterOverride, JsonSerializerOptions, cancellationToken);
+            => GetAsync<T>(Credentials, _httpClient, sys_id, queryParameterOverride, cancellationToken);
 
         /// <summary>
         /// Asynchronously retrieves a page of records matching the table model query parameters.
@@ -47,7 +47,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <returns>A <see cref="TableGetResponse{T}"/> containing matching records.</returns>
         public Task<TableGetResponse<T>> GetAsync<T>(
             QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
-            => GetAsync<T>(Credentials, _httpClient, queryParameterOverride, JsonSerializerOptions, default);
+            => GetAsync<T>(Credentials, _httpClient, queryParameterOverride, default);
 
         /// <summary>
         /// Asynchronously retrieves a page of records matching the table model query parameters with cancellation support.
@@ -59,7 +59,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public Task<TableGetResponse<T>> GetAsync<T>(
             QueryParameters? queryParameterOverride,
             CancellationToken cancellationToken) where T : IServiceNowTableModel
-            => GetAsync<T>(Credentials, _httpClient, queryParameterOverride, JsonSerializerOptions, cancellationToken);
+            => GetAsync<T>(Credentials, _httpClient, queryParameterOverride, cancellationToken);
 
         /// <summary>
         /// Static method to asynchronously retrieve a single record by <c>sys_id</c>.
@@ -73,7 +73,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             IServiceNowCredential credential,
             string sys_id,
             QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
-            => GetAsync<T>(credential, HttpClient, sys_id, queryParameterOverride, null, default);
+            => GetAsync<T>(credential, HttpClient, sys_id, queryParameterOverride, default);
 
         /// <summary>
         /// Static method to asynchronously retrieve a single record by <c>sys_id</c> with cancellation support.
@@ -89,17 +89,16 @@ namespace Blacus.ServiceNowTableAPIWrapper
             string sys_id,
             QueryParameters? queryParameterOverride,
             CancellationToken cancellationToken) where T : IServiceNowTableModel
-            => GetAsync<T>(credential, HttpClient, sys_id, queryParameterOverride, null, cancellationToken);
+            => GetAsync<T>(credential, HttpClient, sys_id, queryParameterOverride, cancellationToken);
 
         /// <summary>
-        /// Static method to asynchronously retrieve a single record using custom HTTP client and JSON options.
+        /// Static method to asynchronously retrieve a single record using custom HTTP client.
         /// </summary>
         /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
         /// <param name="credential">ServiceNow credential.</param>
         /// <param name="httpClient">HTTP client instance.</param>
         /// <param name="sys_id">The ServiceNow <c>sys_id</c>.</param>
         /// <param name="queryParameterOverride">Optional query parameter overrides.</param>
-        /// <param name="jsonSerializerOptions">Optional JSON serializer options.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A <see cref="RecordGetResponse{T}"/> containing the record.</returns>
         public static async Task<RecordGetResponse<T>> GetAsync<T>(
@@ -107,7 +106,6 @@ namespace Blacus.ServiceNowTableAPIWrapper
             HttpClient httpClient,
             string sys_id,
             QueryParameters? queryParameterOverride = null,
-            JsonSerializerOptions? jsonSerializerOptions = null,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
         {
             if (credential == null) throw new ArgumentNullException(nameof(credential));
@@ -121,7 +119,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             using var response = await httpClient.SendAsync(request, cancellationToken);
 
             RecordGetResponse<T>? result;
-            var options = jsonSerializerOptions ?? JsonSerializerOptionsBuilder.Singleton;
+            var options = JsonSerializerOptionsBuilder.Singleton;
 
             if (UseStreaming)
             {
@@ -162,7 +160,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public static Task<TableGetResponse<T>> GetAsync<T>(
             IServiceNowCredential credential,
             QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
-            => GetAsync<T>(credential, HttpClient, queryParameterOverride, null, default);
+            => GetAsync<T>(credential, HttpClient, queryParameterOverride, default);
 
         /// <summary>
         /// Static method to asynchronously retrieve table records with cancellation support.
@@ -176,23 +174,21 @@ namespace Blacus.ServiceNowTableAPIWrapper
             IServiceNowCredential credential,
             QueryParameters? queryParameterOverride,
             CancellationToken cancellationToken) where T : IServiceNowTableModel
-            => GetAsync<T>(credential, HttpClient, queryParameterOverride, null, cancellationToken);
+            => GetAsync<T>(credential, HttpClient, queryParameterOverride, cancellationToken);
 
         /// <summary>
-        /// Static method to asynchronously retrieve table records using custom HTTP client and JSON options.
+        /// Static method to asynchronously retrieve table records using custom HTTP client.
         /// </summary>
         /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
         /// <param name="credential">ServiceNow credential.</param>
         /// <param name="httpClient">HTTP client instance.</param>
         /// <param name="queryParameterOverride">Optional query parameter overrides.</param>
-        /// <param name="jsonSerializerOptions">Optional JSON serializer options.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A <see cref="TableGetResponse{T}"/> containing table records.</returns>
         public static async Task<TableGetResponse<T>> GetAsync<T>(
             IServiceNowCredential credential,
             HttpClient httpClient,
             QueryParameters? queryParameterOverride = null,
-            JsonSerializerOptions? jsonSerializerOptions = null,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
         {
             if (credential == null) throw new ArgumentNullException(nameof(credential));
@@ -200,7 +196,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             QueryParameters queryParameters = new QueryParameters<T>().GetQueryParameters(queryParameterOverride);
             string url = UrlHelper.BuildTableUrl(credential, queryParameters.TableName ?? string.Empty, null, null);
 
-            return await GetTableByURLAsync<T>(credential, httpClient, new Uri(url), queryParameterOverride, jsonSerializerOptions, cancellationToken);
+            return await GetTableByURLAsync<T>(credential, httpClient, new Uri(url), queryParameterOverride, cancellationToken);
         }
     }
 }

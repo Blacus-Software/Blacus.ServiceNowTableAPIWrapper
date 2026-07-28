@@ -22,7 +22,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             Uri link,
             QueryParameters? queryParameters = null,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
-            => await GetTableByURLAsync<T>(Credentials, _httpClient, link, queryParameters, JsonSerializerOptions, cancellationToken);
+            => await GetTableByURLAsync<T>(Credentials, _httpClient, link, queryParameters, cancellationToken);
 
         /// <summary>
         /// Static method to asynchronously retrieve table records from a direct URL.
@@ -38,17 +38,16 @@ namespace Blacus.ServiceNowTableAPIWrapper
             Uri url,
             QueryParameters? queryParameterOverride = null,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
-            => await GetTableByURLAsync<T>(credential, HttpClient, url, queryParameterOverride, null, cancellationToken);
+            => await GetTableByURLAsync<T>(credential, HttpClient, url, queryParameterOverride, cancellationToken);
 
         /// <summary>
-        /// Static method to asynchronously retrieve table records from a direct URL using custom HTTP client and JSON options.
+        /// Static method to asynchronously retrieve table records from a direct URL using custom HTTP client.
         /// </summary>
         /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
         /// <param name="credential">ServiceNow credential.</param>
         /// <param name="httpClient">HTTP client instance.</param>
         /// <param name="url">The direct URI endpoint.</param>
         /// <param name="queryParameterOverride">Optional query parameters override.</param>
-        /// <param name="jsonSerializerOptions">Optional JSON serializer options.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A <see cref="TableGetResponse{T}"/> containing table records.</returns>
         public static async Task<TableGetResponse<T>> GetTableByURLAsync<T>(
@@ -56,7 +55,6 @@ namespace Blacus.ServiceNowTableAPIWrapper
             HttpClient httpClient,
             Uri url,
             QueryParameters? queryParameterOverride = null,
-            JsonSerializerOptions? jsonSerializerOptions = null,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
         {
             if (credential == null) throw new ArgumentNullException(nameof(credential));
@@ -77,12 +75,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            if (!response.IsSuccessStatusCode)
-                throw new HttpRequestException($"ServiceNow API error (Status {response.StatusCode}): {responseString}");
+            var options = JsonSerializerOptionsBuilder.Singleton;
 
-            var options = jsonSerializerOptions ?? JsonSerializerOptionsBuilder.Singleton;
-
-            TableGetResponse<T>? result = System.Text.Json.JsonSerializer.Deserialize<TableGetResponse<T>>(responseString, options);
+            TableGetResponse<T>? result = JsonSerializer.Deserialize<TableGetResponse<T>>(responseString, options);
             if (result != null)
             {
                 result.OriginalJSON = responseString;

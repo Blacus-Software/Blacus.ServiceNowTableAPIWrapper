@@ -74,7 +74,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <param name="json">JSON input string.</param>
         /// <returns>A deserialized <see cref="ServiceNowCredentialBearerToken"/> or null.</returns>
         public static ServiceNowCredentialBearerToken? FromJson(string json) =>
-            JsonSerializer.Deserialize<ServiceNowCredentialBearerToken>(json, new JsonSerializerOptions());
+            JsonSerializer.Deserialize<ServiceNowCredentialBearerToken>(json, JsonSerializerOptionsBuilder.Singleton);
 
         /// <summary>
         /// Deserializes a list of <see cref="ServiceNowCredentialBearerToken"/> from JSON.
@@ -82,14 +82,14 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <param name="json">JSON input string.</param>
         /// <returns>A list of deserialized credentials or null.</returns>
         public static List<ServiceNowCredentialBearerToken>? FromJsonList(string json) =>
-            JsonSerializer.Deserialize<List<ServiceNowCredentialBearerToken>>(json, new JsonSerializerOptions());
+            JsonSerializer.Deserialize<List<ServiceNowCredentialBearerToken>>(json, JsonSerializerOptionsBuilder.Singleton);
 
         /// <summary>
         /// Serializes this credential instance to indented JSON.
         /// </summary>
         /// <returns>JSON representation of this object.</returns>
         public string ToJson() =>
-            JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+            JsonSerializer.Serialize(this, JsonSerializerOptionsBuilder.Singleton);
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <param name="json">JSON input string.</param>
         /// <returns>A deserialized <see cref="ServiceNowCredentialUsername"/> or null.</returns>
         public static ServiceNowCredentialUsername? FromJson(string json) =>
-            JsonSerializer.Deserialize<ServiceNowCredentialUsername>(json, new JsonSerializerOptions());
+            JsonSerializer.Deserialize<ServiceNowCredentialUsername>(json, JsonSerializerOptionsBuilder.Singleton);
 
         /// <summary>
         /// Deserializes a list of <see cref="ServiceNowCredentialUsername"/> from JSON.
@@ -163,14 +163,14 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <param name="json">JSON input string.</param>
         /// <returns>A list of deserialized credentials or null.</returns>
         public static List<ServiceNowCredentialUsername>? FromJsonList(string json) =>
-            JsonSerializer.Deserialize<List<ServiceNowCredentialUsername>>(json, new JsonSerializerOptions());
+            JsonSerializer.Deserialize<List<ServiceNowCredentialUsername>>(json, JsonSerializerOptionsBuilder.Singleton);
 
         /// <summary>
         /// Serializes this credential instance to indented JSON.
         /// </summary>
         /// <returns>JSON representation of this object.</returns>
         public string ToJson() =>
-            JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+            JsonSerializer.Serialize(this, JsonSerializerOptionsBuilder.Singleton);
     }
 
     /// <summary>
@@ -237,7 +237,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <param name="json">JSON input string.</param>
         /// <returns>A deserialized <see cref="ServiceNowCredential"/> or null.</returns>
         public static ServiceNowCredential? FromJson(string json) =>
-            JsonSerializer.Deserialize<ServiceNowCredential>(json, new JsonSerializerOptions());
+            JsonSerializer.Deserialize<ServiceNowCredential>(json, JsonSerializerOptionsBuilder.Singleton);
 
         /// <summary>
         /// Deserializes a list of <see cref="ServiceNowCredential"/> from JSON.
@@ -245,13 +245,13 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <param name="json">JSON input string.</param>
         /// <returns>A list of deserialized credentials or null.</returns>
         public static List<ServiceNowCredential>? FromJsonList(string json) =>
-            JsonSerializer.Deserialize<List<ServiceNowCredential>>(json, new JsonSerializerOptions());
+            JsonSerializer.Deserialize<List<ServiceNowCredential>>(json, JsonSerializerOptionsBuilder.Singleton);
 
         /// <summary>
         /// Serializes this credential instance to indented JSON.
         /// </summary>
         /// <returns>JSON representation of this object.</returns>
         public string ToJson() =>
-            JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+            JsonSerializer.Serialize(this, JsonSerializerOptionsBuilder.Singleton);
     }
 }

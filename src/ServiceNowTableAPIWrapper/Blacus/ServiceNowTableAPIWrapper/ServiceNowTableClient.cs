@@ -31,16 +31,11 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public IServiceNowCredential Credentials { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="JsonSerializerOptions"/> used for JSON serialization and deserialization.
-        /// </summary>
-        public JsonSerializerOptions JsonSerializerOptions { get; set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ServiceNowTableClient"/> class using default HTTP client settings.
         /// </summary>
         /// <param name="credentials">The ServiceNow credentials.</param>
         public ServiceNowTableClient(IServiceNowCredential credentials)
-            : this(credentials, defaultClient, JsonSerializerOptionsBuilder.Singleton)
+            : this(credentials, defaultClient)
         {
         }
 
@@ -50,31 +45,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <param name="credentials">The ServiceNow credentials.</param>
         /// <param name="httpClient">The HTTP client instance.</param>
         public ServiceNowTableClient(IServiceNowCredential credentials, HttpClient httpClient)
-            : this(credentials, httpClient, JsonSerializerOptionsBuilder.Singleton)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceNowTableClient"/> class with custom <see cref="JsonSerializerOptions"/>.
-        /// </summary>
-        /// <param name="credentials">The ServiceNow credentials.</param>
-        /// <param name="jsonSerializerOptions">The custom JSON serializer options.</param>
-        public ServiceNowTableClient(IServiceNowCredential credentials, JsonSerializerOptions jsonSerializerOptions)
-            : this(credentials, defaultClient, jsonSerializerOptions)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceNowTableClient"/> class with a custom <see cref="HttpClient"/> and custom <see cref="JsonSerializerOptions"/>.
-        /// </summary>
-        /// <param name="credentials">The ServiceNow credentials.</param>
-        /// <param name="httpClient">The HTTP client instance.</param>
-        /// <param name="jsonSerializerOptions">The custom JSON serializer options.</param>
-        public ServiceNowTableClient(IServiceNowCredential credentials, HttpClient httpClient, JsonSerializerOptions jsonSerializerOptions)
         {
             this.Credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
             this._httpClient = httpClient ?? defaultClient;
-            this.JsonSerializerOptions = jsonSerializerOptions ?? JsonSerializerOptionsBuilder.Singleton;
         }
 
         /// <summary>
@@ -93,7 +66,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
             if (serviceNowCacheService == null)
                 throw new ArgumentNullException(nameof(serviceNowCacheService));
 
-            var options = JsonSerializerOptions;
+            var options = JsonSerializerOptionsBuilder.Singleton;
             Type t = typeof(T);
             List<T> toReturn = new();
 
@@ -169,7 +142,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             using var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Post, new Uri(url), Credentials);
 
-            string jsonText = System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptions);
+            string jsonText = JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
             request.Content = new StringContent(jsonText, System.Text.Encoding.UTF8, "application/json");
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -180,7 +153,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
         private RecordGetResponse<T> JSONDeserialize<T>(string json)
         {
-            var toReturn = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, JsonSerializerOptions);
+            var toReturn = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, JsonSerializerOptionsBuilder.Singleton);
             if (toReturn != null)
             {
                 toReturn.SourceJSON = json;
@@ -213,7 +186,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             using var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Patch, new Uri(url), Credentials);
 
-            string jsonText = System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptions);
+            string jsonText = System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
             request.Content = new StringContent(jsonText, System.Text.Encoding.UTF8, "application/json");
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -245,7 +218,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             using var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(method, new Uri(url), Credentials);
 
-            string jsonText = System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptions);
+            string jsonText = System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
             request.Content = new StringContent(jsonText, System.Text.Encoding.UTF8, "application/json");
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);

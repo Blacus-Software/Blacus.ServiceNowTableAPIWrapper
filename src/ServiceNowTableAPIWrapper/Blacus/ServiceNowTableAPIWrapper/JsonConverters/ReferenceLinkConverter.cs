@@ -27,7 +27,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
                     var stringValue = reader.GetString();
                     return new ReferenceLink { Value = stringValue };
                 case JsonTokenType.StartObject:
-                    var objectValue = JsonSerializer.Deserialize<ReferenceLink>(ref reader, options);
+                    var objectValue = JsonSerializer.Deserialize<ReferenceLink>(ref reader, JsonSerializerOptionsBuilder.Singleton);
                     return objectValue;
             }
             throw new JsonException("Cannot unmarshal type ReferenceLink");
@@ -46,11 +46,15 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             if (value.Value != null)
             {
-                JsonSerializer.Serialize(writer, value.Value, options);
+                writer.WriteStringValue(value.Value);
+            }
+            else if (value.DisplayValue != null)
+            {
+                writer.WriteStringValue(value.DisplayValue);
             }
             else
             {
-                JsonSerializer.Serialize(writer, value.DisplayValue, options);
+                writer.WriteNullValue();
             }
         }
 
@@ -83,7 +87,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
                 case JsonTokenType.String:
                     return null;
                 case JsonTokenType.StartObject:
-                    var objectValue = JsonSerializer.Deserialize<ReferenceLink<T>>(ref reader, options);
+                    var objectValue = JsonSerializer.Deserialize<ReferenceLink<T>>(ref reader, JsonSerializerOptionsBuilder.Singleton);
                     return objectValue;
             }
             throw new JsonException($"Cannot unmarshal type ReferenceLink<{typeof(T).Name}>");
@@ -102,17 +106,24 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             if (value.Record != null)
             {
-                JsonSerializer.Serialize(writer, value.Record.SysId, options);
+                if (value.Record.SysId != null)
+                    writer.WriteStringValue(value.Record.SysId);
+                else
+                    writer.WriteNullValue();
                 return;
             }
 
             if (value.Value != null)
             {
-                JsonSerializer.Serialize(writer, value.Value, options);
+                writer.WriteStringValue(value.Value);
+            }
+            else if (value.DisplayValue != null)
+            {
+                writer.WriteStringValue(value.DisplayValue);
             }
             else
             {
-                JsonSerializer.Serialize(writer, value.DisplayValue, options);
+                writer.WriteNullValue();
             }
         }
 

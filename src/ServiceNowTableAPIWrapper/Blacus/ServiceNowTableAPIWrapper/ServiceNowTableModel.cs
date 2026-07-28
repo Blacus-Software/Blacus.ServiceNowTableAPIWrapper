@@ -6,12 +6,14 @@ using System.Text.Json.Serialization;
 
 namespace Blacus.ServiceNowTableAPIWrapper
 {
+    
     /// <summary>
     /// Base class implementation of <see cref="IServiceNowTableModel"/>.
     /// </summary>
     [Obsolete("This class is obsolete. Implement IServiceNowTableModel directly on model classes instead.", false)]
     public class ServiceNowTableModel : IServiceNowTableModel
     {
+
         /// <summary>
         /// Gets or sets the ServiceNow record system identifier (<c>sys_id</c>).
         /// </summary>
@@ -35,5 +37,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         [NotMapped]
         [JsonExtensionData]
         public Dictionary<string, object>? ExtensionData { get; set; }
+
     }
+
 }

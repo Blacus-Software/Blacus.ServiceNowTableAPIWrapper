@@ -22,7 +22,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         /// <returns>A populated <see cref="NameValueCollection"/>.</returns>
         public static NameValueCollection GetQueryString(IQueryParameters queryParameters, IQueryParameters? overrideQueryParameters = null)
         {
-            var query = HttpUtility.ParseQueryString(new UriBuilder() { Port = -1 }.Query);
+            var query = HttpUtility.ParseQueryString(string.Empty);
             var properties = queryParameters.GetType().GetProperties();
 
             foreach (var property in properties.Where(p => p.Name != "Item" && p.Name != "TableName"))
@@ -333,7 +333,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
                 if (sysParmFields != null)
                     return sysParmFields;
 
-                var sysParmFieldsDisableAuto = path.FirstOrDefault(attrib => attrib.GetType().Name == "SysParmFieldsDisableAuto");
+                var sysParmFieldsDisableAuto = path.OfType<SysParmFieldsDisableAuto>().FirstOrDefault();
 
                 if (sysParmFieldsDisableAuto == null)
                 {

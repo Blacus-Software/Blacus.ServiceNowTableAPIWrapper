@@ -7,8 +7,9 @@ namespace Blacus.ServiceNowTableAPIWrapper
     /// Represents an API response wrapper returning a single record.
     /// </summary>
     /// <typeparam name="T">The model type.</typeparam>
-    public class RecordGetResponse<T>
+    public class RecordGetResponse<T> 
     {
+
         /// <summary>
         /// Gets or sets the target deserialized record instance.
         /// </summary>

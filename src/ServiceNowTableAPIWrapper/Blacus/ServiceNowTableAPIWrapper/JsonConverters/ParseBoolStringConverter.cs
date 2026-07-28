@@ -40,7 +40,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options)
         {
             var boolString = value ? "true" : "false";
-            JsonSerializer.Serialize(writer, boolString, options);
+            writer.WriteStringValue(boolString);
         }
 
         /// <summary>

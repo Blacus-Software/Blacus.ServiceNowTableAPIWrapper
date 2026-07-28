@@ -18,7 +18,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
         public async Task<RecordGetResponse<T>> GetRecordByURLAsync<T>(
             Uri link,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
-            => await GetRecordByURLAsync<T>(Credentials, _httpClient, link, JsonSerializerOptions, cancellationToken);
+            => await GetRecordByURLAsync<T>(Credentials, _httpClient, link, cancellationToken);
 
         /// <summary>
         /// Static method to asynchronously retrieve a single record from a direct URL.
@@ -32,23 +32,21 @@ namespace Blacus.ServiceNowTableAPIWrapper
             IServiceNowCredential credential,
             Uri link,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
-            => await GetRecordByURLAsync<T>(credential, HttpClient, link, null, cancellationToken);
+            => await GetRecordByURLAsync<T>(credential, HttpClient, link, cancellationToken);
 
         /// <summary>
-        /// Static method to asynchronously retrieve a single record from a direct URL using custom HTTP client and JSON options.
+        /// Static method to asynchronously retrieve a single record from a direct URL using custom HTTP client.
         /// </summary>
         /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
         /// <param name="credential">ServiceNow credential.</param>
         /// <param name="httpClient">HTTP client instance.</param>
         /// <param name="link">The full URI of the record.</param>
-        /// <param name="jsonSerializerOptions">Optional JSON serializer options.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A <see cref="RecordGetResponse{T}"/> containing the record.</returns>
         public static async Task<RecordGetResponse<T>> GetRecordByURLAsync<T>(
             IServiceNowCredential credential,
             HttpClient httpClient,
             Uri link,
-            JsonSerializerOptions? jsonSerializerOptions = null,
             CancellationToken cancellationToken = default) where T : IServiceNowTableModel
         {
             if (credential == null) throw new ArgumentNullException(nameof(credential));
@@ -65,7 +63,7 @@ namespace Blacus.ServiceNowTableAPIWrapper
 
             string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            var options = jsonSerializerOptions ?? JsonSerializerOptionsBuilder.Singleton;
+            var options = JsonSerializerOptionsBuilder.Singleton;
             RecordGetResponse<T>? result = JsonSerializer.Deserialize<RecordGetResponse<T>>(responseString, options);
 
             if (result != null)
