@@ -1,212 +1,300 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
-
-// #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 
 namespace Blacus.ServiceNowTableAPIWrapper
 {
-
+    /// <summary>
+    /// Provides client methods for querying, inserting, updating, and caching ServiceNow table records.
+    /// </summary>
     public partial class ServiceNowTableClient : IServiceNowTableService
     {
-
-        private static HttpClient client = new(new HttpClientHandler
+        private static readonly HttpClient defaultClient = new(new HttpClientHandler
         {
             UseCookies = false
         });
-        public static HttpClient HttpClient => client;
 
-        public ServiceNowCredential Credentials { get; set; }
+        private readonly HttpClient _httpClient;
 
-        public ServiceNowTableClient(ServiceNowCredential credentials)
+        /// <summary>
+        /// Gets the default static <see cref="HttpClient"/> instance used when no custom client is provided.
+        /// </summary>
+        public static HttpClient HttpClient => defaultClient;
+
+        /// <summary>
+        /// Gets or sets the credentials used to authenticate requests to ServiceNow.
+        /// </summary>
+        public IServiceNowCredential Credentials { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceNowTableClient"/> class using default HTTP client settings.
+        /// </summary>
+        /// <param name="credentials">The ServiceNow credentials.</param>
+        public ServiceNowTableClient(IServiceNowCredential credentials)
+            : this(credentials, defaultClient)
         {
-            this.Credentials = credentials;
         }
 
-        public async Task<List<T>> GetWithCacheAsync<T>(IServiceNowCacheService serviceNowCacheService, QueryParameters? queryParameterOverride = null) where T : IServiceNowTableModel
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceNowTableClient"/> class using a custom <see cref="HttpClient"/>.
+        /// </summary>
+        /// <param name="credentials">The ServiceNow credentials.</param>
+        /// <param name="httpClient">The HTTP client instance.</param>
+        public ServiceNowTableClient(IServiceNowCredential credentials, HttpClient httpClient)
         {
+            this.Credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
+            this._httpClient = httpClient ?? defaultClient;
+        }
+
+        /// <summary>
+        /// Fetches records from ServiceNow utilizing the provided cache service.
+        /// </summary>
+        /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
+        /// <param name="serviceNowCacheService">The cache implementation.</param>
+        /// <param name="queryParameterOverride">Optional query parameters override.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A list of cached or freshly fetched records.</returns>
+        public async Task<List<T>> GetWithCacheAsync<T>(
+            IServiceNowCacheService serviceNowCacheService,
+            QueryParameters? queryParameterOverride = null,
+            CancellationToken cancellationToken = default) where T : IServiceNowTableModel
+        {
+            if (serviceNowCacheService == null)
+                throw new ArgumentNullException(nameof(serviceNowCacheService));
 
             var options = JsonSerializerOptionsBuilder.Singleton;
-
             Type t = typeof(T);
-
             List<T> toReturn = new();
 
             var sysIdOnlyQueryParameters = new QueryParameters<T>().GetQueryParameters(queryParameterOverride);
             sysIdOnlyQueryParameters.Fields = string.Join(',', serviceNowCacheService.CacheFields);
 
-            var sysIdList = await GetAsync<T>(sysIdOnlyQueryParameters);
+            var sysIdList = await GetAsync<T>(sysIdOnlyQueryParameters, cancellationToken);
+
+            if (sysIdList?.Records == null)
+                return toReturn;
 
             foreach (var _record in sysIdList.Records)
             {
-
-                T returnRecord = default;
-                IServiceNowTableModel cachedRecord = null;
-
+                T? returnRecord = default;
+                IServiceNowTableModel? cachedRecord = null;
                 var sysIdRecord = (IServiceNowTableModel)_record;
 
                 string cacheId = $"{t.FullName}:{sysIdRecord.SysId}";
-
-                string json = serviceNowCacheService.CacheGet(cacheId);
+                string? json = serviceNowCacheService.CacheGet?.Invoke(cacheId);
 
                 if (json != null)
                 {
                     returnRecord = System.Text.Json.JsonSerializer.Deserialize<T>(json, options);
-                    cachedRecord = (IServiceNowTableModel)returnRecord;
+                    cachedRecord = returnRecord;
                 }
 
-                if (!serviceNowCacheService.Compare(cachedRecord, sysIdRecord))
+                if (serviceNowCacheService.Compare == null || !serviceNowCacheService.Compare(cachedRecord, sysIdRecord))
                 {
+                    var singleRecordQuery = queryParameterOverride != null
+                        ? queryParameterOverride.Clone()
+                        : new QueryParameters();
+                    singleRecordQuery.Query = null;
 
-                    queryParameterOverride.Query = null;
-                    RecordGetResponse<T> record = await GetAsync<T>(sysIdRecord.SysId, queryParameterOverride);
+                    RecordGetResponse<T> record = await GetAsync<T>(sysIdRecord.SysId!, singleRecordQuery, cancellationToken);
                     returnRecord = record.Record;
-                    serviceNowCacheService.PostProcessing((IServiceNowTableModel)returnRecord);
-                    string outputJson = System.Text.Json.JsonSerializer.Serialize<T>(returnRecord, options);
-                    serviceNowCacheService.CacheUpdate(cacheId, outputJson);
 
+                    if (returnRecord != null)
+                    {
+                        serviceNowCacheService.PostProcessing?.Invoke(returnRecord);
+                        string outputJson = System.Text.Json.JsonSerializer.Serialize<T>(returnRecord, options);
+                        serviceNowCacheService.CacheUpdate?.Invoke(cacheId, outputJson);
+                    }
                 }
 
-                toReturn.Add(returnRecord);
-
+                if (returnRecord != null)
+                {
+                    toReturn.Add(returnRecord);
+                }
             }
 
             return toReturn;
-
         }
 
-
-        public async Task<RecordGetResponse<T>> PostAsync<T>(IServiceNowTableModel record) where T : IServiceNowTableModel
+        /// <summary>
+        /// Posts a new record to the ServiceNow table via HTTP POST.
+        /// </summary>
+        /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
+        /// <param name="record">The record to create.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The creation response containing the inserted record.</returns>
+        public async Task<RecordGetResponse<T>> PostAsync<T>(
+            IServiceNowTableModel record,
+            CancellationToken cancellationToken = default) where T : IServiceNowTableModel
         {
-
-            Type recordType = record.GetType();
+            if (record == null)
+                throw new ArgumentNullException(nameof(record));
 
             var queryParameters = new QueryParameters<T>();
-
             var query = queryParameters.GetQueryString();
             var tableName = queryParameters.TableName;
 
-            string url = string.Empty;
+            string url = UrlHelper.BuildTableUrl(Credentials, tableName, null, query.ToString());
 
-            HttpRequestMessage request = null;
+            using var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Post, new Uri(url), Credentials);
 
-            url = $"https://{Credentials.Url}/api/now/table/{tableName}?{query.ToString()}";
+            string jsonText = JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
+            request.Content = new StringContent(jsonText, System.Text.Encoding.UTF8, "application/json");
 
-            request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Post, new Uri(url), Credentials);
-
-            string jsonText =
-                System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
-
-            var content = new StringContent(jsonText, null, "application/json");
-
-            request.Content = content;
-            var response = client.Send(request);
-
-            string responseString = await response.Content.ReadAsStringAsync();
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
             return JSONDeserialize<T>(responseString);
-
         }
 
         private RecordGetResponse<T> JSONDeserialize<T>(string json)
         {
-            var options = JsonSerializerOptionsBuilder.Singleton;
-            var toReturn = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, options);
-            toReturn.SourceJSON = json;
-            return toReturn;
+            var toReturn = System.Text.Json.JsonSerializer.Deserialize<RecordGetResponse<T>>(json, JsonSerializerOptionsBuilder.Singleton);
+            if (toReturn != null)
+            {
+                toReturn.SourceJSON = json;
+            }
+            return toReturn!;
         }
 
-        public async Task<RecordGetResponse<T>> PatchAsync<T>(IServiceNowTableModel record) where T : IServiceNowTableModel
+        /// <summary>
+        /// Patches an existing record in the ServiceNow table via HTTP PATCH.
+        /// </summary>
+        /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
+        /// <param name="record">The record to update (must have a valid <see cref="IServiceNowTableModel.SysId"/>).</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The patch response containing the updated record.</returns>
+        public async Task<RecordGetResponse<T>> PatchAsync<T>(
+            IServiceNowTableModel record,
+            CancellationToken cancellationToken = default) where T : IServiceNowTableModel
         {
+            if (record == null)
+                throw new ArgumentNullException(nameof(record));
 
             if (record.SysId == null)
                 throw new KeyNotFoundException("The field sys_id is null");
 
             var queryParameters = new QueryParameters<T>();
-
-            var query = queryParameters.GetQueryString;
-            var tableName = queryParameters.TableName;
-
-            Uri url = new($"https://{Credentials.Url}/api/now/table/{tableName}/{record.SysId}?{query.ToString()}");
-
-            HttpRequestMessage request = null;
-
-            request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Patch, url, Credentials);
-
-            string jsonText =
-                System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
-
-            var content = new StringContent(jsonText, null, "application/json");
-
-            request.Content = content;
-            var response = client.Send(request);
-
-            string responseString = await response.Content.ReadAsStringAsync();
-
-            return JSONDeserialize<T>(responseString);
-
-        }
-
-        public async Task<RecordGetResponse<T>> UpsertAsync<T>(IServiceNowTableModel record) where T : IServiceNowTableModel
-        {
-
-            var queryParameters = new QueryParameters<T>();
-
             var query = queryParameters.GetQueryString();
             var tableName = queryParameters.TableName;
 
-            string url = null;
+            string url = UrlHelper.BuildTableUrl(Credentials, tableName, record.SysId, query.ToString());
 
-            HttpRequestMessage request = null;
+            using var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(HttpMethod.Patch, new Uri(url), Credentials);
 
-            if (record.SysId == null)
-            {
-                url = $"https://{Credentials.Url}/api/now/table/{tableName}?{query.ToString()}";
-                request = new HttpRequestMessage(HttpMethod.Post, url);
-            }
-            else
-            {
-                url = $"https://{Credentials.Url}/api/now/table/{tableName}/{record.SysId}?{query.ToString()}";
-                request = new HttpRequestMessage(HttpMethod.Patch, url);
-            }
+            string jsonText = System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
+            request.Content = new StringContent(jsonText, System.Text.Encoding.UTF8, "application/json");
 
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Credentials.BearerString);
-
-            string jsonText =
-                System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
-
-            var content = new StringContent(jsonText, null, "application/json");
-
-            request.Content = content;
-            var response = client.Send(request);
-
-            string responseString = await response.Content.ReadAsStringAsync();
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
             return JSONDeserialize<T>(responseString);
-
         }
 
-        public async Task<List<T>> ListAllRecordsAsync<T>(QueryParameters queryParameters) where T : IServiceNowTableModel
+        /// <summary>
+        /// Performs an upsert operation (POST if <see cref="IServiceNowTableModel.SysId"/> is null; PATCH otherwise).
+        /// </summary>
+        /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
+        /// <param name="record">The record to insert or update.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The response containing the saved record.</returns>
+        public async Task<RecordGetResponse<T>> UpsertAsync<T>(
+            IServiceNowTableModel record,
+            CancellationToken cancellationToken = default) where T : IServiceNowTableModel
         {
+            if (record == null)
+                throw new ArgumentNullException(nameof(record));
 
+            var queryParameters = new QueryParameters<T>();
+            var query = queryParameters.GetQueryString();
+            var tableName = queryParameters.TableName;
+
+            HttpMethod method = record.SysId == null ? HttpMethod.Post : HttpMethod.Patch;
+            string url = UrlHelper.BuildTableUrl(Credentials, tableName, record.SysId, query.ToString());
+
+            using var request = ServiceNowHttpRequestMessage.NewHttpRequestMessage(method, new Uri(url), Credentials);
+
+            string jsonText = System.Text.Json.JsonSerializer.Serialize<object>(record, JsonSerializerOptionsBuilder.Singleton);
+            request.Content = new StringContent(jsonText, System.Text.Encoding.UTF8, "application/json");
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            return JSONDeserialize<T>(responseString);
+        }
+
+        /// <summary>
+        /// Fetches and returns all matching records across all paginated responses into a in-memory list.
+        /// </summary>
+        /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
+        /// <param name="queryParameters">Query parameters specifying filters and limits.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A list containing all retrieved records across all pages.</returns>
+        public async Task<List<T>> ListAllRecordsAsync<T>(
+            QueryParameters queryParameters,
+            CancellationToken cancellationToken = default) where T : IServiceNowTableModel
+        {
             var toReturn = new List<T>();
 
-            var getResponse = await GetAsync<T>(queryParameters);
-            toReturn.AddRange(getResponse.Records);
-
-            while (getResponse.HasNext)
+            var getResponse = await GetAsync<T>(queryParameters, cancellationToken);
+            if (getResponse?.Records != null)
             {
-                getResponse = await GetTableByURLAsync<T>(new System.Uri(getResponse.NextLink));
                 toReturn.AddRange(getResponse.Records);
             }
 
-            return toReturn;
+            while (getResponse != null && getResponse.HasNext && !string.IsNullOrEmpty(getResponse.NextLink))
+            {
+                getResponse = await GetTableByURLAsync<T>(new Uri(getResponse.NextLink), cancellationToken: cancellationToken);
+                if (getResponse?.Records != null)
+                {
+                    toReturn.AddRange(getResponse.Records);
+                }
+            }
 
+            return toReturn;
         }
 
-    }
+        /// <summary>
+        /// Streams all matching records across paginated HTTP responses asynchronously one by one without buffering the entire dataset into memory.
+        /// </summary>
+        /// <typeparam name="T">The record model type implementing <see cref="IServiceNowTableModel"/>.</typeparam>
+        /// <param name="queryParameters">Query parameters specifying filters and limits.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>An async enumerable sequence yielding records as they arrive from ServiceNow.</returns>
+        public async IAsyncEnumerable<T> StreamAllRecordsAsync<T>(
+            QueryParameters queryParameters,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : IServiceNowTableModel
+        {
+            if (queryParameters == null)
+                throw new ArgumentNullException(nameof(queryParameters));
 
+            var getResponse = await GetAsync<T>(queryParameters, cancellationToken);
+            if (getResponse?.Records != null)
+            {
+                foreach (var record in getResponse.Records)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    yield return record;
+                }
+            }
+
+            while (getResponse != null && getResponse.HasNext && !string.IsNullOrEmpty(getResponse.NextLink))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                getResponse = await GetTableByURLAsync<T>(new Uri(getResponse.NextLink), cancellationToken: cancellationToken);
+                if (getResponse?.Records != null)
+                {
+                    foreach (var record in getResponse.Records)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        yield return record;
+                    }
+                }
+            }
+        }
+    }
 }

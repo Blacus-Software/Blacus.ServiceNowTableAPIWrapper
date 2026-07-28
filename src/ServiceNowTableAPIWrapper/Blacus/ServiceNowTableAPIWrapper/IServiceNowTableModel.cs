@@ -1,15 +1,15 @@
 ﻿namespace Blacus.ServiceNowTableAPIWrapper
 {
-    using System.Text.Json;
-
+    /// <summary>
+    /// Represents a strongly-typed model mapping to a ServiceNow table record.
+    /// </summary>
     public interface IServiceNowTableModel
     {
-
-        public string? SysId { get; set; }
-
-        public JsonSerializerOptions GetJsonSerializerOptions() =>
-           JsonSerializerOptionsBuilder.Singleton;
+        
+        /// <summary>
+        /// Gets or sets the ServiceNow system identifier (<c>sys_id</c>).
+        /// </summary>
+        string? SysId { get; set; }
 
     }
-
 }
