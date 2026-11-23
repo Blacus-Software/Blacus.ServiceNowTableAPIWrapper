@@ -1,0 +1,107 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "google/gemini-flash-latest",
+  "small_model": "google/gemini-flash-lite-latest",
+  "permission": {
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      ".env": "deny",
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "*.pem": "deny",
+      "**/*.pem": "deny",
+      "*.key": "deny",
+      "**/*.key": "deny",
+      "*.min.js": "deny",
+      "**/*.min.js": "deny",
+      "node_modules/**": "deny",
+      "**/node_modules/**": "deny"
+    },
+    "edit": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      ".env": "deny",
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "*.pem": "deny",
+      "**/*.pem": "deny",
+      "*.key": "deny",
+      "**/*.key": "deny",
+      "*.min.js": "deny",
+      "**/*.min.js": "deny",
+      "node_modules/**": "deny",
+      "**/node_modules/**": "deny"
+    }
+  },
+  "watcher": {
+    "ignore": [
+      "**/.env*",
+      "**/*.pem",
+      "**/*.key",
+      "**/*.min.js",
+      "**/node_modules/**",
+      "**/bin/**",
+      "**/obj/**"
+    ]
+  },
+  "formatter": {
+    "csharp": {
+      "command": [
+        "dotnet",
+        "format",
+        "--include",
+        "$FILE"
+      ],
+      "extensions": [
+        ".cs"
+      ]
+    }
+  },
+  "lsp": {
+    "csharp": {
+      "command": [
+        "csharp-ls"
+      ],
+      "extensions": [
+        ".cs"
+      ]
+    }
+  },
+  "mcp": {
+    "microsoft-learn": {
+      "type": "remote",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "enabled": true
+    },
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  },
+  "commands": {
+    "ship": {
+      "agent": "git-helper",
+      "template": "Run `git status`, stage modified files, commit with a concise message describing the changes, and push to the current upstream branch."
+    }
+  },
+  "agents": {
+    "git-helper": {
+      "model": "google/gemini-flash-lite-latest",
+      "systemPrompt": "You are a Git automation assistant. Only execute git commands (status, add, commit, push) with concise messages. Do not inspect or read files unless strictly necessary.",
+      "tools": {
+        "bash": true,
+        "read_file": false,
+        "glob": false,
+        "grep": false
+      }
+    }
+  }
+}
