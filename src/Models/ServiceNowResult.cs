@@ -9,6 +9,7 @@ public sealed record ServiceNowResult<T>(
     ServiceNowError? Error = null,
     string? RawJson = null)
 {
+    
     public static ServiceNowResult<T> Success(T value, HttpStatusCode statusCode, string? rawJson = null) =>
         new(true, statusCode, value, null, rawJson);
 
@@ -20,6 +21,7 @@ public sealed record ServiceNowResult<T>(
         string? serverStatus = null,
         string? rawJson = null) =>
         new(false, statusCode, default, new ServiceNowError(kind, message, detail, serverStatus), rawJson);
+
 }
 
 public sealed record ServiceNowDeleteResult(

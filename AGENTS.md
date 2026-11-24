@@ -61,6 +61,11 @@ Read `SPEC.md` completely before generating, refactoring, or reviewing any file 
 - On `CreateAsync`, `PatchAsync`, `ReplaceAsync`, and `UpsertAsync`, ALWAYS append resolved shape-controlling query parameters (`sysparm_display_value`, `sysparm_exclude_reference_link`, `sysparm_fields`, `sysparm_view`) to the request URI so ServiceNow's response body matches `T`'s expected JSON schema.
 - Properties marked `[ServiceNowReadOnly]` MUST be included in auto-projected `GET` `sysparm_fields`, but MUST be omitted when serializing `POST`/`PUT`/`PATCH` request bodies via `ReadOnlyPropertyModifier`.
 
+### Rule 7: NEVER Overwrite or Revert Intervening User Edits
+- Always treat the working directory's current disk state as the source of truth immediately prior to applying changes.
+- Never blindly overwrite files using stale in-memory buffers or cached reads if the file has been modified since it was last inspected.
+- When modifying existing files, inspect recent changes or use targeted diff-based edits. If intervening user modifications are detected, re-read the updated file and reconcile your changes on top of the user's edits rather than replacing or clobbering them.
+
 ---
 
 ## 3. C# & Project Coding Standards
@@ -90,3 +95,4 @@ Before finalizing any code generation or edit task, verify:
 5. [ ] Do `dynamic` results materialize as `ExpandoObject` (never `JsonElement`)?
 6. [ ] Does `ReferenceLink` serialize outbound as a bare `sys_id` string, keep `.Record` free of hidden I/O, and always reload over the network when `LoadAsync` is called?
 7. [ ] Are `ImplicitUsings = disable`, `.ConfigureAwait(false)`, XML doc comments, and `UseCookies = false` preserved everywhere?
+8. [ ] Were all file edits verified against the latest disk state to ensure intervening user changes were preserved and not clobbered?

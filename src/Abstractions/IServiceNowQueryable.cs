@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Blacus.ServiceNowTableAPIWrapper.Linq;
 using Blacus.ServiceNowTableAPIWrapper.Models;
 
 public interface IServiceNowQueryable<T> where T : class, IServiceNowRecord
 {
+    
     IServiceNowQueryable<T> Where(Expression<Func<T, bool>> predicate);
     IServiceNowQueryable<T> OrderBy<TKey>(Expression<Func<T, TKey>> keySelector);
     IServiceNowQueryable<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> keySelector);
@@ -26,10 +28,12 @@ public interface IServiceNowQueryable<T> where T : class, IServiceNowRecord
     Task<ServiceNowResult<T?>> FirstOrDefaultAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<ServiceNowPageResult<T>> StreamPagesAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<ServiceNowResult<T>> StreamRecordsAsync(CancellationToken cancellationToken = default);
+
 }
 
 public interface IServiceNowDynamicQueryable
 {
+
     IServiceNowDynamicQueryable Where(Expression<Func<ServiceNowRow, bool>> predicate);
     IServiceNowDynamicQueryable OrderBy(string fieldName);
     IServiceNowDynamicQueryable OrderByDescending(string fieldName);
@@ -47,4 +51,5 @@ public interface IServiceNowDynamicQueryable
     Task<ServiceNowResult<dynamic?>> FirstOrDefaultAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<ServiceNowPageResult<dynamic>> StreamPagesAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<ServiceNowResult<dynamic>> StreamRecordsAsync(CancellationToken cancellationToken = default);
+
 }
